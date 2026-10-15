@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alisio - Maspalomas Ground Station Watch</title>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+<style>
+  html, body { margin: 0; height: 100%; background: #070b12; color: #d7e2f0; font: 14px/1.4 system-ui, sans-serif; }
+  #app { position: fixed; inset: 0; }
+  #file-notice { display: none; position: fixed; inset: 0; place-items: center; text-align: center; padding: 24px; }
+  #file-notice code { background: #162033; padding: 2px 8px; border-radius: 4px; }
+  #disclaimer { position: fixed; left: 0; right: 0; bottom: 0; padding: 6px 12px; text-align: center; font-size: 12px; background: rgba(7, 11, 18, .85); color: #9fb3cc; z-index: 10; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="file-notice"><p>Alisio needs a local web server.<br>Run <code>npm start</code> and open <code>http://127.0.0.1:8080/</code>.</p></div>
+<div id="disclaimer">Unofficial and illustrative. Not affiliated with ESA, the European Commission or INTA.</div>
+<script>
+  // Classic script so it runs even when ES modules are blocked on file:.
+  if (location.protocol === 'file:') document.getElementById('file-notice').style.display = 'grid';
+</script>
+<script type="module">
+  // Module entry placeholder: src/app/main.mjs is wired in a later slice.
+</script>
+</body>
+</html>
