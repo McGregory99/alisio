@@ -62,3 +62,14 @@
 /* Provenance badge (R7.7) */
 .badge { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 9px; font-size: 11px; color: #0b1220; }
 #dashboard [hidden] { display: none !important; }
+
+/* Pass tracker (R7.4) */
+#dashboard ul.tracker { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+#dashboard .pass-row { width: 100%; text-align: left; display: flex; flex-direction: column; gap: 1px; background: rgba(12, 18, 28, .5); }
+#dashboard .tracker li[data-phase="downlink"] .pass-row { border-color: #ffe28a; }
+#dashboard .tracker li[data-phase="pre-position"] .pass-row { border-color: var(--accent); }
+#dashboard .tracker li[data-phase="delivered"] .pass-row { opacity: .65; }
+#dashboard .tracker .state { font-size: 11px; color: var(--accent); }
+#dashboard .tracker .nrt[data-status="at-risk"] { color: var(--warn); }
+#dashboard .tracker .nrt[data-status="late"] { color: var(--bad); }
+#dashboard .tracker .nrt[data-status="on-time"] { color: var(--ok); }

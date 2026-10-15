@@ -25,6 +25,7 @@ import { createTimeControl } from '../ui/time-control.mjs';
 import { createPackets } from '../scene/packets.mjs';
 import { createDashboard } from '../ui/dashboard.mjs';
 import { createDetail } from '../ui/detail.mjs';
+import { createTracker } from '../ui/tracker.mjs';
 
 const clock = createSimClock();
 // No network on load: the live refresh only runs when the user asks (gated, see orbit-source).
@@ -70,6 +71,7 @@ const search = createSearch({
 });
 const dashboard = world.add(createDashboard({ orbitSource }));
 world.add(createDetail({ dashboard, orbitSource, station: MASPALOMAS }));
+world.add(createTracker({ dashboard }));
 world.start();
 
 export { dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };
