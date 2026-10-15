@@ -1,6 +1,6 @@
 // The only module that imports the vendored satellite.js. Builds satrecs from OMM JSON (not TLE),
 // so NORAD IDs beyond 5 digits (e.g. Sentinel-3C, 100690) work.
-import { json2satrec, propagate } from '../../vendor/satellite.js-7.1.0/dist/index.js';
+import { json2satrec, propagate, gstime, eciToEcf } from '../../vendor/satellite.js-7.1.0/dist/index.js';
 
 /**
  * @param {object} omm CelesTrak OMM JSON record
@@ -23,4 +23,10 @@ export function propagateAt(sat, date) {
   const pv = propagate(sat.satrec, date);
   if (!pv || !pv.position || typeof pv.position.x !== 'number' || Number.isNaN(pv.position.x)) return null;
   return pv;
+}
+
+/** Earth-fixed (ECF) position in km at `date`, or null. */
+export function ecfAt(sat, date) {
+  const pv = propagateAt(sat, date);
+  return pv ? eciToEcf(pv.position, gstime(date)) : null;
 }
