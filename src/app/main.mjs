@@ -14,6 +14,7 @@ import { createEgress } from '../scene/egress.mjs';
 import { createLabels } from '../scene/labels.mjs';
 import { createStationAssets } from '../scene/station-assets.mjs';
 import { createSky } from '../scene/sky.mjs';
+import { createDishes } from '../scene/dishes.mjs';
 
 const clock = createSimClock();
 // No network on load: the live refresh only runs when the user asks (gated, see orbit-source).
@@ -35,6 +36,7 @@ world.add(createEnv(ctx));
 const assets = world.add(createStationAssets(ctx));
 const egress = world.add(createEgress(ctx));
 const sky = world.add(createSky({ ...ctx, pivotOf: assets.pivotOf }));
+const dishes = world.add(createDishes({ station: MASPALOMAS, assets }));
 const entityById = new Map(assets.entities.map((e) => [e.id, e]));
 const targets = assets.pickables.map((object) => ({ object, entity: entityById.get(object.userData.entityId) }));
 if (egress.link) targets.push({ object: egress.group, entity: egress.link });
@@ -42,4 +44,4 @@ world.add(createLabels({ ...ctx, targets }));
 world.add(createCamera(ctx));
 world.start();
 
-export { clock, orbitSource, schedule, sky, assets, egress };
+export { clock, orbitSource, schedule, sky, dishes, assets, egress };
