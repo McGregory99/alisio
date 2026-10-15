@@ -96,3 +96,16 @@ export function sampleTrack(sat, observer, aosMs, losMs, stepS = 10) {
   }
   return track;
 }
+
+const C_KM_S = 299_792.458;
+
+/** Range rate in km/s (positive when receding), central difference over +-1 s. */
+export function rangeRate(sat, observer, tMs, halfStepMs = 1000) {
+  const r = (t) => geoLookAngles(observer, sat, new Date(t)).rangeKm;
+  return (r(tMs + halfStepMs) - r(tMs - halfStepMs)) / (2 * halfStepMs / 1000);
+}
+
+/** Received-frequency offset in Hz for a carrier `freqHz` and range rate in km/s: -f * rdot / c. */
+export function dopplerHz(freqHz, rangeRateKmS) {
+  return (-freqHz * rangeRateKmS) / C_KM_S;
+}
