@@ -23,6 +23,7 @@ import { areasFor, stationChoices } from '../ui/areas.mjs';
 import { terrainHeight } from '../scene/terrain-math.mjs';
 import { createTimeControl } from '../ui/time-control.mjs';
 import { createPackets } from '../scene/packets.mjs';
+import { createDashboard } from '../ui/dashboard.mjs';
 
 const clock = createSimClock();
 // No network on load: the live refresh only runs when the user asks (gated, see orbit-source).
@@ -66,6 +67,7 @@ const search = createSearch({
   items: () => searchItems,
   onPick: (item) => { const t = allTargets().find((x) => (x.entity.id === item.id)); if (t) { labelsSys.show(t.entity); selection.flyToTarget(t); } },
 });
+const dashboard = world.add(createDashboard({ orbitSource }));
 world.start();
 
-export { clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };
+export { dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };
