@@ -21,7 +21,7 @@
 #dashboard {
   position: fixed; top: 12px; right: 12px; bottom: calc(var(--disclaimer-h) + 12px); width: var(--panel-w);
   z-index: 11; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; overscroll-behavior: contain;
-  color: var(--ink); font: 13px/1.4 system-ui, sans-serif; scrollbar-width: thin;
+  color: var(--ink); font: 13px/1.4 system-ui, sans-serif; scrollbar-width: thin; color-scheme: dark;
 }
 #dashboard .panel {
   background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 12px;
@@ -73,3 +73,17 @@
 #dashboard .tracker .nrt[data-status="at-risk"] { color: var(--warn); }
 #dashboard .tracker .nrt[data-status="late"] { color: var(--bad); }
 #dashboard .tracker .nrt[data-status="on-time"] { color: var(--ok); }
+
+/* Tables (R7.5) */
+#dashboard .tabs { display: flex; gap: 6px; margin-bottom: 6px; }
+#dashboard .tabs button[aria-pressed="true"] { background: #2f6fbf; border-color: var(--accent); }
+#dashboard .table-scroll { max-height: 240px; overflow: auto; color-scheme: dark; }
+#dashboard table.data { width: 100%; border-collapse: collapse; font-size: 12px; }
+#dashboard table.data th { text-align: left; position: sticky; top: 0; background: rgba(12, 18, 28, .95); padding: 0; }
+#dashboard table.data th button { width: 100%; text-align: left; border: 0; border-radius: 0; padding: 4px 4px; font-size: 11px; color: var(--ink-dim); background: transparent; }
+#dashboard table.data th[aria-sort="ascending"] button::after { content: " \25B2"; }
+#dashboard table.data th[aria-sort="descending"] button::after { content: " \25BC"; }
+#dashboard table.data td { padding: 3px 4px; border-top: 1px solid var(--glass-border); font-variant-numeric: tabular-nums; }
+#dashboard table.data td .badge { margin-left: 0; }
+#dashboard table.data tr.pickable { cursor: pointer; }
+#dashboard table.data tr.pickable:hover { background: rgba(159, 208, 255, .08); }
