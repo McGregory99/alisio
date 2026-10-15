@@ -16,8 +16,8 @@ export function textSprite(THREE, text, { width = 512, height = 96, scale = [150
   return s;
 }
 
-/** Click a labelled element to read its provenance badge and note. `targets` = [{ object, entity }]. */
-export function createLabels({ THREE, camera, canvas, targets }) {
+/** Click a labelled element to read its provenance badge and note. `targets` = [{ object, entity }] or a function returning it. */
+export function createLabels({ THREE, camera, canvas, targets, onSelect = () => {} }) {
   const card = document.createElement('div');
   card.id = 'element-label';
   card.setAttribute('role', 'status');
@@ -25,6 +25,7 @@ export function createLabels({ THREE, camera, canvas, targets }) {
   document.body.appendChild(card);
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   let down = null;
+  const list = () => (typeof targets === 'function' ? targets() : targets);
 
   function show(entity) {
     const t = labelText(entity);
@@ -40,9 +41,11 @@ export function createLabels({ THREE, camera, canvas, targets }) {
     const r = canvas.getBoundingClientRect();
     ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    for (const hit of ray.intersectObjects(targets.map((t) => t.object), true)) {
+    const hidden = (o) => { for (; o; o = o.parent) if (!o.visible) return true; return false; };
+    for (const hit of ray.intersectObjects(list().map((t) => t.object), true)) {
+      if (hidden(hit.object)) continue;
       let o = hit.object;
-      while (o) { const t = targets.find((x) => x.object === o); if (t) return show(t.entity); o = o.parent; }
+      while (o) { const t = list().find((x) => x.object === o); if (t) { show(t.entity); return onSelect(t); } o = o.parent; }
     }
     card.style.display = 'none';
   }

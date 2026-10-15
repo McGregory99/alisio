@@ -15,6 +15,7 @@ import { createLabels } from '../scene/labels.mjs';
 import { createStationAssets } from '../scene/station-assets.mjs';
 import { createSky } from '../scene/sky.mjs';
 import { createDishes } from '../scene/dishes.mjs';
+import { createSelection } from '../scene/selection.mjs';
 import { createPackets } from '../scene/packets.mjs';
 
 const clock = createSimClock();
@@ -42,8 +43,11 @@ const packets = world.add(createPackets({ ...ctx, pivotOf: assets.pivotOf, egres
 const entityById = new Map(assets.entities.map((e) => [e.id, e]));
 const targets = assets.pickables.map((object) => ({ object, entity: entityById.get(object.userData.entityId) }));
 if (egress.link) targets.push({ object: egress.group, entity: egress.link });
-world.add(createLabels({ ...ctx, targets }));
-world.add(createCamera(ctx));
+const camera = createCamera(ctx);
+const selection = createSelection({ THREE: ctx.THREE, camera, sky });
+world.add(createLabels({ ...ctx, targets: () => [...targets, ...sky.targets()], onSelect: selection.flyToTarget }));
+world.add(camera);
+world.add(selection);
 world.start();
 
-export { clock, orbitSource, schedule, sky, dishes, packets, assets, egress };
+export { clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection };

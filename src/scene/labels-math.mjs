@@ -9,6 +9,7 @@ export function labelText(entity) {
   const badge = badgeFor(entity.provenance).text;
   let note;
   if (entity.kind === 'link') note = 'Off-site processing and archiving, shown as a generic link; site names not claimed.';
+  else if (entity.kind === 'satellite') note = `Direction from SGP4 propagation of the stored orbit data; mission-to-station role: ${entity.provenance}.`;
   else if (entity.provenance === 'illustrative') note = 'Illustrative: artistic placeholder, not a real installation.';
   else if (entity.illustrative?.length) note = `Existence verified; illustrative: ${entity.illustrative.join(', ')}.`;
   else note = 'Verified.';

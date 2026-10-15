@@ -33,3 +33,10 @@ test('the egress link is labelled generic', () => {
 test('badge colours differ by provenance', () => {
   assert.notEqual(badgeFor('verified').color, badgeFor('illustrative').color);
 });
+
+test('a satellite label states its position is propagated and carries the mission role provenance', () => {
+  const t = labelText({ kind: 'satellite', label: 'Sentinel-2B', provenance: 'illustrative' });
+  assert.equal(t.title, 'Sentinel-2B');
+  assert.match(t.note, /SGP4/);
+  assert.match(t.note, /illustrative/);
+});

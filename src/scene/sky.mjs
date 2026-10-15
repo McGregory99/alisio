@@ -24,9 +24,11 @@ export function createSky({ THREE, scene, pivotOf }) {
       );
       const label = textSprite(THREE, s.mission.name, { scale: [84, 15.75] });
       label.position.y = 11;
-      root.add(dot, label);
+      const hit = new THREE.Mesh(new THREE.SphereGeometry(9, 8, 6), new THREE.MeshBasicMaterial({ visible: false })); // generous click target
+      root.add(dot, label, hit);
       group.add(root);
       it = { root, dot, label };
+      it.entity = { kind: 'satellite', id: `sat-${s.norad}`, label: s.mission.name, provenance: s.mission.provenance };
       items.set(s.norad, it);
     }
     return it;
@@ -35,6 +37,8 @@ export function createSky({ THREE, scene, pivotOf }) {
   const states = new Map(); // norad -> { azDeg, elDeg, rangeKm, visible, antennaId }
   return {
     group, states, radius: SKY_RADIUS,
+    /** Pickable satellites: [{ object, entity }]. Hidden ones (below the horizon) are skipped by the hit-test. */
+    targets() { return [...items.values()].map((it) => ({ object: it.root, entity: it.entity })); },
     update({ schedule }) {
       for (const s of schedule.satellites) {
         const it = item(s);

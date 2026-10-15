@@ -19,3 +19,32 @@ test('distance beyond the maximum is pulled back along the view ray', () => {
   const p = constrainCamera({ x: 0, y: 10, z: 1200 }, { x: 0, y: 10, z: 0 }, { ...opts, heightAt: () => -100, maxDistance: 600 });
   assert.ok(Math.abs(Math.hypot(p.x, p.y - 10, p.z) - 600) < 1e-6);
 });
+
+import { framingPosition, smoothstep, lerp3, followDelta } from '../../src/scene/camera-math.mjs';
+
+test('framing keeps the viewing direction and sets the distance to the target', () => {
+  const p = framingPosition({ x: 0, y: 0, z: 0 }, { x: 30, y: 0, z: 40 }, 100);
+  assert.ok(Math.abs(p.x - 60) < 1e-9 && Math.abs(p.z - 80) < 1e-9 && p.y === 0);
+});
+
+test('framing a camera sitting exactly on the target falls back to a diagonal view', () => {
+  const p = framingPosition({ x: 5, y: 5, z: 5 }, { x: 5, y: 5, z: 5 }, 50);
+  assert.ok(Math.abs(Math.hypot(p.x - 5, p.y - 5, p.z - 5) - 50) < 1e-9);
+});
+
+test('smoothstep eases between 0 and 1 and clamps', () => {
+  assert.equal(smoothstep(-1), 0);
+  assert.equal(smoothstep(0), 0);
+  assert.equal(smoothstep(0.5), 0.5);
+  assert.equal(smoothstep(1), 1);
+  assert.equal(smoothstep(7), 1);
+});
+
+test('lerp3 interpolates each axis', () => {
+  assert.deepEqual(lerp3({ x: 0, y: 10, z: -4 }, { x: 10, y: 20, z: 4 }, 0.5), { x: 5, y: 15, z: 0 });
+});
+
+test('follow delta is the movement of the tracked point since the last frame', () => {
+  assert.deepEqual(followDelta({ x: 1, y: 2, z: 3 }, { x: 4, y: 2, z: 0 }), { x: 3, y: 0, z: -3 });
+  assert.deepEqual(followDelta(null, { x: 4, y: 2, z: 0 }), { x: 0, y: 0, z: 0 });
+});
