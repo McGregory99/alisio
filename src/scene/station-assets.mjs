@@ -98,8 +98,15 @@ export function createStationAssets({ THREE, scene, station }) {
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 6), lampMat); bulb.position.set(x, terrainHeight(x, z) + 5.2, z); scene.add(bulb);
   }
 
+  /** Elevation pivot of an antenna in scene coordinates, or the station origin on the terrain when unknown. */
+  function pivotOf(id) {
+    const d = dishes.get(id);
+    if (!d) return { x: 0, y: terrainHeight(0, 0), z: 0 };
+    return { x: d.group.position.x, y: d.group.position.y + d.pivotH, z: d.group.position.z };
+  }
+
   return {
-    entities, dishes, pickables,
+    entities, dishes, pickables, pivotOf,
     update({ sun }) {
       const k = envFromSun(sun.elDeg).stationLights;
       windowMat.emissiveIntensity = 1.6 * k;
