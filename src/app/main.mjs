@@ -21,6 +21,7 @@ import { searchItemsFrom } from '../ui/search-match.mjs';
 import { createAreaSwitcher } from '../ui/area-switcher.mjs';
 import { areasFor, stationChoices } from '../ui/areas.mjs';
 import { terrainHeight } from '../scene/terrain-math.mjs';
+import { createTimeControl } from '../ui/time-control.mjs';
 import { createPackets } from '../scene/packets.mjs';
 
 const clock = createSimClock();
@@ -58,6 +59,7 @@ const areaSwitcher = createAreaSwitcher({
   stations: stationChoices([MASPALOMAS]), // one station in data today; a second one appears here with no code change
   onArea: selection.flyToArea,
 });
+world.add(createTimeControl({ clock }));
 const allTargets = () => [...targets, ...sky.targets()];
 const searchItems = searchItemsFrom({ missions: MISSIONS, entities: assets.entities.concat(egress.link ? [egress.link] : []) });
 const search = createSearch({
