@@ -16,6 +16,8 @@ import { createStationAssets } from '../scene/station-assets.mjs';
 import { createSky } from '../scene/sky.mjs';
 import { createDishes } from '../scene/dishes.mjs';
 import { createSelection } from '../scene/selection.mjs';
+import { createSearch } from '../ui/search.mjs';
+import { searchItemsFrom } from '../ui/search-match.mjs';
 import { createPackets } from '../scene/packets.mjs';
 
 const clock = createSimClock();
@@ -45,9 +47,15 @@ const targets = assets.pickables.map((object) => ({ object, entity: entityById.g
 if (egress.link) targets.push({ object: egress.group, entity: egress.link });
 const camera = createCamera(ctx);
 const selection = createSelection({ THREE: ctx.THREE, camera, sky });
-world.add(createLabels({ ...ctx, targets: () => [...targets, ...sky.targets()], onSelect: selection.flyToTarget }));
+const labelsSys = world.add(createLabels({ ...ctx, targets: () => [...targets, ...sky.targets()], onSelect: selection.flyToTarget }));
 world.add(camera);
 world.add(selection);
+const allTargets = () => [...targets, ...sky.targets()];
+const searchItems = searchItemsFrom({ missions: MISSIONS, entities: assets.entities.concat(egress.link ? [egress.link] : []) });
+const search = createSearch({
+  items: () => searchItems,
+  onPick: (item) => { const t = allTargets().find((x) => (x.entity.id === item.id)); if (t) { labelsSys.show(t.entity); selection.flyToTarget(t); } },
+});
 world.start();
 
-export { clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection };
+export { clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search };

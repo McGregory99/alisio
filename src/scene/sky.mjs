@@ -45,9 +45,10 @@ export function createSky({ THREE, scene, pivotOf }) {
         const visible = s.elDeg != null && s.elDeg > 0;
         states.set(s.norad, { azDeg: s.azDeg, elDeg: s.elDeg, rangeKm: s.rangeKm, visible, antennaId: s.antennaId });
         it.root.visible = visible;
-        if (!visible) continue;
+        if (s.elDeg == null) continue;
         const p = skyPoint(s.antennaId ? pivotOf(s.antennaId) : origin(), s.azDeg, s.elDeg);
-        it.root.position.set(p.x, p.y, p.z);
+        it.root.position.set(p.x, p.y, p.z); // kept current below the horizon too, so a fly-to lands on its true direction
+        if (!visible) continue;
         const active = s.antennaId != null;
         it.dot.material.color.set(active ? '#ffe28a' : '#9fd0ff');
         it.dot.scale.setScalar(active ? 1.6 : 1);
