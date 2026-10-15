@@ -23,8 +23,6 @@
   // Classic script so it runs even when ES modules are blocked on file:.
   if (location.protocol === 'file:') document.getElementById('file-notice').style.display = 'grid';
 </script>
-<script type="module">
-  // Module entry placeholder: src/app/main.mjs is wired in a later slice.
-</script>
+<script type="module" src="./src/app/main.mjs"></script>
 </body>
 </html>
