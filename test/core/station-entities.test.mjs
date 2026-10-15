@@ -36,7 +36,7 @@ test('every entity carries provenance and a label', () => {
   }
 });
 
-test('antenna entities expose diameter, flagship flag and a size class', () => {
+test('antenna entities expose diameter, flagship flag', () => {
   const list = ofKind(entitiesFromStation(MASPALOMAS), 'antenna');
   const flagship = list.find((e) => e.flagship);
   assert.equal(flagship.diameterM, 15);

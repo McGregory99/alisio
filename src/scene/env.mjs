@@ -7,7 +7,9 @@ export function createEnv({ THREE, scene, renderer }) {
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, { left: -250, right: 250, top: 250, bottom: -250, near: 1, far: 1200 });
-  scene.add(hemi, sun, sun.target);
+  const moon = new THREE.DirectionalLight('#9fb6ff', 0.5);
+  moon.position.set(-300, 500, -200); // fixed cool fill from the north-west; not an ephemeris moon
+  scene.add(hemi, sun, sun.target, moon);
   scene.background = new THREE.Color('#8fb8d8');
   scene.fog = new THREE.Fog('#8fb8d8', 500, 2600);
 
@@ -29,10 +31,12 @@ export function createEnv({ THREE, scene, renderer }) {
       sun.position.set(Math.cos(el) * Math.sin(az), Math.sin(el), -Math.cos(el) * Math.cos(az)).multiplyScalar(800);
       sun.intensity = e.sunIntensity;
       hemi.intensity = e.ambient;
+      moon.intensity = e.moonIntensity;
+      hemi.color.set(e.skyHex).lerp(new THREE.Color('#bcd4ee'), 1 - e.starOpacity * 0.6);
       scene.background.set(e.skyHex);
       scene.fog.color.set(e.fogHex);
       starMat.opacity = e.starOpacity;
-      renderer.toneMappingExposure = 0.9 + 0.3 * (e.sunIntensity / 2.4);
+      renderer.toneMappingExposure = 0.95 + 0.25 * (e.sunIntensity / 2.4);
     },
   };
 }
