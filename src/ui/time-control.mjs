@@ -6,7 +6,7 @@ import { timeButtons, formatUtc, nextPassTarget } from './time-control-model.mjs
 export function createTimeControl({ clock }) {
   injectBaseStyle();
   const root = document.createElement('div');
-  root.className = 'hud'; root.setAttribute('role', 'group'); root.setAttribute('aria-label', 'Time control');
+  root.className = 'hud'; root.id = 'time-control'; root.setAttribute('role', 'group'); root.setAttribute('aria-label', 'Time control');
   root.style.cssText = 'left:50%;transform:translateX(-50%);bottom:40px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;max-width:94vw';
   const clockText = document.createElement('span');
   clockText.style.cssText = 'padding:6px 10px;border-radius:8px;background:rgba(12,18,28,.8);font-variant-numeric:tabular-nums';

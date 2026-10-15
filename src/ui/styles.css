@@ -87,3 +87,41 @@
 #dashboard table.data td .badge { margin-left: 0; }
 #dashboard table.data tr.pickable { cursor: pointer; }
 #dashboard table.data tr.pickable:hover { background: rgba(159, 208, 255, .08); }
+
+/* Legend (R7.7) */
+#dashboard ul.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+#dashboard ul.legend .badge { margin-left: 0; }
+
+/* Sheet handle: hidden on desktop */
+#dashboard .sheet-handle { display: none; }
+html { --sheet-h: 0px; }
+html, body { overflow-x: hidden; }
+
+/* Mobile bottom sheet (R7.9): panels collapse into a sheet above the disclaimer; no horizontal scroll */
+@media (max-width: 768px) {
+  #dashboard {
+    top: auto; left: 0; right: 0; width: auto; bottom: var(--disclaimer-h); box-sizing: border-box;
+    padding: 0 8px 8px; gap: 8px; border-radius: 16px 16px 0 0; overflow-x: hidden;
+    background: var(--glass); border-top: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  }
+  #dashboard .sheet-handle {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 1px; position: sticky; top: 0; z-index: 2;
+    width: 100%; flex: 0 0 auto; min-height: 56px; padding: 14px 4px 6px; border: 0; border-radius: 16px 16px 0 0;
+    background: rgba(12, 18, 28, .9); touch-action: none; text-align: left;
+  }
+  #dashboard .sheet-handle .grip { position: absolute; top: 6px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: var(--ink-dim); }
+  #dashboard[data-sheet="collapsed"] > .panel { display: none; }
+  #dashboard[data-sheet="collapsed"] { overflow-y: hidden; }
+  #dashboard .panel { flex: 0 0 auto; }
+  #dashboard .table-scroll { max-height: 200px; }
+  #dashboard table.data { font-size: 11px; }
+
+  #dashboard h1 { display: none; } /* the sheet handle already carries the product name */
+  /* the expanded sheet takes the lower part of the screen; the time control returns when it collapses */
+  html[data-sheet="expanded"] #time-control { display: none !important; }
+  /* keep the other controls clear of the sheet */
+  #time-control { bottom: calc(var(--disclaimer-h) + var(--sheet-h) + 8px) !important; max-width: calc(100vw - 16px) !important; }
+  #element-label { bottom: calc(var(--disclaimer-h) + var(--sheet-h) + 56px) !important; max-width: calc(100vw - 32px) !important; }
+  .hud[aria-label="Area"] { max-width: calc(100vw - 24px) !important; }
+}

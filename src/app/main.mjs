@@ -28,6 +28,8 @@ import { createDetail } from '../ui/detail.mjs';
 import { createTracker } from '../ui/tracker.mjs';
 import { createGlobe } from '../ui/globe.mjs';
 import { createTables } from '../ui/tables.mjs';
+import { createLegend } from '../ui/legend.mjs';
+import { createSheet } from '../ui/sheet.mjs';
 
 const clock = createSimClock();
 // No network on load: the live refresh only runs when the user asks (gated, see orbit-source).
@@ -76,6 +78,8 @@ world.add(createDetail({ dashboard, orbitSource, station: MASPALOMAS }));
 world.add(createTracker({ dashboard }));
 world.add(createGlobe({ dashboard, station: MASPALOMAS }));
 world.add(createTables({ dashboard, orbitSource, station: MASPALOMAS }));
+createLegend({ dashboard });
+world.add(createSheet({ dashboard }));
 world.start();
 
 export { dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };
