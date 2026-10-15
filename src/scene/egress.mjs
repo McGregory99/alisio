@@ -30,5 +30,5 @@ export function createEgress({ THREE, scene, station }) {
   group.userData.entityId = link.id;
   scene.add(group);
 
-  return { link, group, label, pickables: [group], update() {} };
+  return { link, group, label, path: pts, pickables: [group], update() {} };
 }
