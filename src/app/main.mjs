@@ -18,6 +18,9 @@ import { createDishes } from '../scene/dishes.mjs';
 import { createSelection } from '../scene/selection.mjs';
 import { createSearch } from '../ui/search.mjs';
 import { searchItemsFrom } from '../ui/search-match.mjs';
+import { createAreaSwitcher } from '../ui/area-switcher.mjs';
+import { areasFor, stationChoices } from '../ui/areas.mjs';
+import { terrainHeight } from '../scene/terrain-math.mjs';
 import { createPackets } from '../scene/packets.mjs';
 
 const clock = createSimClock();
@@ -50,6 +53,11 @@ const selection = createSelection({ THREE: ctx.THREE, camera, sky });
 const labelsSys = world.add(createLabels({ ...ctx, targets: () => [...targets, ...sky.targets()], onSelect: selection.flyToTarget }));
 world.add(camera);
 world.add(selection);
+const areaSwitcher = createAreaSwitcher({
+  areas: areasFor(MASPALOMAS, { heightAt: terrainHeight }),
+  stations: stationChoices([MASPALOMAS]), // one station in data today; a second one appears here with no code change
+  onArea: selection.flyToArea,
+});
 const allTargets = () => [...targets, ...sky.targets()];
 const searchItems = searchItemsFrom({ missions: MISSIONS, entities: assets.entities.concat(egress.link ? [egress.link] : []) });
 const search = createSearch({
@@ -58,4 +66,4 @@ const search = createSearch({
 });
 world.start();
 
-export { clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search };
+export { clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };

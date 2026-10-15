@@ -34,8 +34,14 @@ export function createSelection({ THREE, camera: cam, sky }) {
     cam.flyTo(() => c, { dist });
   }
 
+  /** Fly to an area preset `{ target, dist, dirFrom }` (R6.4). */
+  function flyToArea({ target, dist, dirFrom }) {
+    const c = new THREE.Vector3(target.x, target.y, target.z);
+    cam.flyTo(() => c, { dist, dirFrom });
+  }
+
   return {
-    flyToTarget, flyToPoint, chip,
+    flyToTarget, flyToPoint, flyToArea, chip,
     update() {
       if (followed && !followed.visible) { cam.stopFollow(); followed = null; } // the satellite set: nothing left to track
       const label = cam.following();

@@ -27,9 +27,11 @@ export function createCamera({ THREE, camera, canvas }) {
   return {
     controls,
     /** Animate the camera to frame the subject at `dist`; with `follow` it keeps tracking until `stopFollow`. */
-    flyTo(getPos, { dist = 120, follow = false, label = null, durationS = 1.4 } = {}) {
+    flyTo(getPos, { dist = 120, follow = false, label = null, durationS = 1.4, dirFrom = null } = {}) {
       const toT0 = getPos();
-      const dir = framingPosition(toT0, camera.position, dist);
+      // dirFrom: an offset direction to view from (presets); otherwise keep the current viewing direction.
+      const from = dirFrom ? { x: toT0.x + dirFrom.x, y: toT0.y + dirFrom.y, z: toT0.z + dirFrom.z } : camera.position;
+      const dir = framingPosition(toT0, from, dist);
       fly = { t: 0, dur: durationS, fromT: controls.target.clone(), fromP: camera.position.clone(), getPos, dist, dir };
       tracked = follow ? { getPos, label, last: null } : null;
     },
