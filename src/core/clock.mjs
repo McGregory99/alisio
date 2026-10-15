@@ -1,4 +1,5 @@
 // Simulation clock: sim = anchorSim + (real - anchorReal) * rate. All time-dependent logic reads this.
+import { PREPOSITION_MS } from './lifecycle.mjs';
 export const RATES = Object.freeze([1, 10, 60, 600]);
 
 /** @param {{realNow?: () => number, simStart?: number}} opts realNow returns epoch ms; simStart defaults to realNow() (live). */
@@ -28,4 +29,14 @@ export function createSimClock({ realNow = Date.now, simStart } = {}) {
     seek(sim) { reanchor(sim); live = false; },
     goLive() { anchorReal = realNow(); anchorSim = anchorReal; rate = 1; paused = false; live = true; },
   };
+}
+
+/** Earliest pre-position time (AOS - 120 s) strictly after `nowMs`, or null. Used by "next pass" (R6.5). */
+export function nextPassTime(passes, nowMs) {
+  let best = null;
+  for (const p of passes) {
+    const t = p.aos - PREPOSITION_MS;
+    if (t > nowMs && (best === null || t < best)) best = t;
+  }
+  return best;
 }
