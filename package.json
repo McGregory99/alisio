@@ -1,0 +1,12 @@
+{
+  "name": "alisio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Alisio - Maspalomas Ground Station Watch (unofficial, illustrative)",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.mjs\"",
+    "start": "node tools/serve.mjs",
+    "snapshot": "node tools/update-snapshot.mjs"
+  }
+}
