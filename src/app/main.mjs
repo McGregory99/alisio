@@ -6,6 +6,7 @@ import { createWorld } from '../scene/renderer.mjs';
 import { createTerrain } from '../scene/terrain.mjs';
 import { createEnv } from '../scene/env.mjs';
 import { createCamera } from '../scene/camera.mjs';
+import { createStationAssets } from '../scene/station-assets.mjs';
 
 const clock = createSimClock();
 const world = createWorld({
@@ -18,6 +19,7 @@ const world = createWorld({
 const ctx = { ...world.ctx, station: MASPALOMAS };
 world.add(createTerrain(ctx));
 world.add(createEnv(ctx));
+const assets = world.add(createStationAssets(ctx));
 world.add(createCamera(ctx));
 world.start();
 
