@@ -5,6 +5,9 @@
 import { geoLookAngles } from './geo.mjs';
 import { phaseAt } from './lifecycle.mjs';
 
+/** One-line footnote for the detail panel (A5). */
+export const REFERENCE_NOTE = 'Look angles are computed from the station geodetic origin; dish pointing uses each antenna pivot.';
+
 export const STOW = Object.freeze({ azDeg: 0, elDeg: 90 }); // zenith, matches the scene's stowed dish
 const PREPOSITION_EL_DEG = 5; // illustrative: wait just above the mask at the AOS azimuth
 
