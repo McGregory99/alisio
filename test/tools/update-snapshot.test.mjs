@@ -41,3 +41,10 @@ test('rendered module is marked generated and round-trips', () => {
   assert.match(text, /fetchedAt/);
   assert.equal(readFileSync(new URL('../../src/data/omm-snapshot.mjs', import.meta.url), 'utf8'), text);
 });
+
+test('optionValue returns undefined when the flag is absent or has no value', async () => {
+  const { optionValue } = await import('../../tools/update-snapshot.mjs');
+  assert.equal(optionValue(['--input', 'f.json'], '--fetched-at'), undefined);
+  assert.equal(optionValue(['--input'], '--input'), undefined);
+  assert.equal(optionValue(['--input', 'f.json', '--fetched-at', '2026-10-15T00:00:00Z'], '--fetched-at'), '2026-10-15T00:00:00Z');
+});

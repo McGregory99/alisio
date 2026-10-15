@@ -38,8 +38,14 @@ ${rows}
 `;
 }
 
+/** Value following a flag, or undefined when the flag is absent or last. */
+export function optionValue(argv, name) {
+  const i = argv.indexOf(name);
+  return i === -1 ? undefined : argv[i + 1];
+}
+
 async function main(argv) {
-  const arg = (name) => argv[argv.indexOf(name) + 1];
+  const arg = (name) => optionValue(argv, name);
   let records;
   let fetchedAt = arg('--fetched-at') ?? new Date().toISOString();
   if (argv.includes('--live')) {
