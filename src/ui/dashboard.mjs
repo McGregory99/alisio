@@ -76,7 +76,7 @@ export function createDashboard({ orbitSource }) {
     selected: () => selected,
     onSelect(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     update({ simMs, dt, schedule }) {
-      acc += dt * 1000;
+      acc += Math.max(0, dt) * 1000;
       if (acc < REFRESH_MS && !dirty) return;
       acc = 0; dirty = false;
       const served = schedule.assignments.filter((a) => a.status === 'assigned').map((a) => a.pass).concat(schedule.finished.map((f) => f.pass));

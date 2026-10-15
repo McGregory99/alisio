@@ -24,6 +24,7 @@ import { terrainHeight } from '../scene/terrain-math.mjs';
 import { createTimeControl } from '../ui/time-control.mjs';
 import { createPackets } from '../scene/packets.mjs';
 import { createDashboard } from '../ui/dashboard.mjs';
+import { createDetail } from '../ui/detail.mjs';
 
 const clock = createSimClock();
 // No network on load: the live refresh only runs when the user asks (gated, see orbit-source).
@@ -52,7 +53,7 @@ const targets = assets.pickables.map((object) => ({ object, entity: entityById.g
 if (egress.link) targets.push({ object: egress.group, entity: egress.link });
 const camera = createCamera(ctx);
 const selection = createSelection({ THREE: ctx.THREE, camera, sky });
-const labelsSys = world.add(createLabels({ ...ctx, targets: () => [...targets, ...sky.targets()], onSelect: selection.flyToTarget }));
+const labelsSys = world.add(createLabels({ ...ctx, targets: () => [...targets, ...sky.targets()], onSelect: (t) => { selection.flyToTarget(t); dashboard.select(t.entity); } }));
 world.add(camera);
 world.add(selection);
 const areaSwitcher = createAreaSwitcher({
@@ -65,9 +66,10 @@ const allTargets = () => [...targets, ...sky.targets()];
 const searchItems = searchItemsFrom({ missions: MISSIONS, entities: assets.entities.concat(egress.link ? [egress.link] : []) });
 const search = createSearch({
   items: () => searchItems,
-  onPick: (item) => { const t = allTargets().find((x) => (x.entity.id === item.id)); if (t) { labelsSys.show(t.entity); selection.flyToTarget(t); } },
+  onPick: (item) => { const t = allTargets().find((x) => (x.entity.id === item.id)); if (t) { labelsSys.show(t.entity); selection.flyToTarget(t); dashboard.select(t.entity); } },
 });
 const dashboard = world.add(createDashboard({ orbitSource }));
+world.add(createDetail({ dashboard, orbitSource, station: MASPALOMAS }));
 world.start();
 
 export { dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };

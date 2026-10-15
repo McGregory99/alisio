@@ -58,3 +58,7 @@
 @media (max-width: 768px) {
   #dashboard { left: 8px; right: 8px; width: auto; }
 }
+
+/* Provenance badge (R7.7) */
+.badge { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 9px; font-size: 11px; color: #0b1220; }
+#dashboard [hidden] { display: none !important; }
