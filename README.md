@@ -1,5 +1,7 @@
 # Alisio - Maspalomas Ground Station Watch
 
+**Live demo:** https://mcgregory99.github.io/alisio/
+
 An unofficial, illustrative 3D world of the Maspalomas ground station on Gran Canaria. It shows real satellite passes (11 active Copernicus Sentinel missions, computed in the browser with SGP4) with antennas that track them, a data-flow animation and an operations dashboard.
 
 > Unofficial and illustrative. Not affiliated with ESA, the European Commission or INTA.
