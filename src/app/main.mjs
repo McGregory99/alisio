@@ -33,6 +33,8 @@ import { createSheet } from '../ui/sheet.mjs';
 import { createWeatherState, weatherAvailability, applyWeather } from '../core/weather.mjs';
 import { createWeatherFx } from '../scene/weather-fx.mjs';
 import { createWeatherSelect } from '../ui/weather-select.mjs';
+import { createEdrs } from '../scene/edrs.mjs';
+import { createEdrsToggle } from '../ui/edrs-toggle.mjs';
 
 const clock = createSimClock();
 // No network on load: the live refresh only runs when the user asks (gated, see orbit-source).
@@ -51,6 +53,7 @@ const world = createWorld({
   },
 });
 const ctx = { ...world.ctx, station: MASPALOMAS };
+const { scene } = ctx;
 world.add(createTerrain(ctx));
 world.add(createEnv({ ...ctx, weather }));
 const weatherFx = world.add(createWeatherFx({ ...ctx, weather }));
@@ -58,6 +61,7 @@ const assets = world.add(createStationAssets(ctx));
 const egress = world.add(createEgress(ctx));
 const sky = world.add(createSky({ ...ctx, pivotOf: assets.pivotOf }));
 const dishes = world.add(createDishes({ station: MASPALOMAS, assets }));
+const edrs = world.add(createEdrs(ctx));
 const packets = world.add(createPackets({ ...ctx, pivotOf: assets.pivotOf, egress }));
 const entityById = new Map(assets.entities.map((e) => [e.id, e]));
 const targets = assets.pickables.map((object) => ({ object, entity: entityById.get(object.userData.entityId) }));
@@ -82,6 +86,7 @@ const search = createSearch({
 const dashboard = world.add(createDashboard({ orbitSource }));
 world.add(createDetail({ dashboard, orbitSource, station: MASPALOMAS, weather }));
 world.add(createWeatherSelect({ dashboard, weather, station: MASPALOMAS }));
+world.add(createEdrsToggle({ dashboard, edrs }));
 world.add(createTracker({ dashboard }));
 world.add(createGlobe({ dashboard, station: MASPALOMAS }));
 world.add(createTables({ dashboard, orbitSource, station: MASPALOMAS }));
@@ -89,4 +94,4 @@ createLegend({ dashboard });
 world.add(createSheet({ dashboard }));
 world.start();
 
-export { weather, weatherFx, dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };
+export { scene, edrs, weather, weatherFx, dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };

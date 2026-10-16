@@ -130,3 +130,4 @@ html, body { overflow-x: hidden; }
 #dashboard .weather-options { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
 #dashboard .weather-options label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
 #dashboard .weather .note { font-size: 11px; color: var(--ink-dim); margin: 6px 0 0; }
+#dashboard .weather label.toggle { display: flex; align-items: center; gap: 4px; cursor: pointer; }
