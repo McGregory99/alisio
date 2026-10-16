@@ -1,7 +1,8 @@
 // Sun-driven environment: light, sky and fog colour, stars at night. Parameters come from env-math.
-import { envFromSun } from './env-math.mjs';
+import { envFromSun, weatherEnv } from './env-math.mjs';
+import { weatherEffects } from '../core/weather.mjs';
 
-export function createEnv({ THREE, scene, renderer }) {
+export function createEnv({ THREE, scene, renderer, weather }) {
   const hemi = new THREE.HemisphereLight('#bcd4ee', '#6b5a48', 0.6);
   const sun = new THREE.DirectionalLight('#fff3dc', 2);
   sun.castShadow = true;
@@ -26,7 +27,7 @@ export function createEnv({ THREE, scene, renderer }) {
 
   return {
     update({ sun: s }) {
-      const e = envFromSun(s.elDeg);
+      const e = weatherEnv(envFromSun(s.elDeg), (weather ? weather.effects() : weatherEffects('clear')).visual);
       const az = (s.azDeg * Math.PI) / 180, el = (Math.max(s.elDeg, 2) * Math.PI) / 180;
       sun.position.set(Math.cos(el) * Math.sin(az), Math.sin(el), -Math.cos(el) * Math.cos(az)).multiplyScalar(800);
       sun.intensity = e.sunIntensity;
@@ -35,6 +36,8 @@ export function createEnv({ THREE, scene, renderer }) {
       hemi.color.set(e.skyHex).lerp(new THREE.Color('#bcd4ee'), 1 - e.starOpacity * 0.6);
       scene.background.set(e.skyHex);
       scene.fog.color.set(e.fogHex);
+      scene.fog.near = e.fogNear;
+      scene.fog.far = e.fogFar;
       starMat.opacity = e.starOpacity;
       renderer.toneMappingExposure = 0.95 + 0.25 * (e.sunIntensity / 2.4);
     },

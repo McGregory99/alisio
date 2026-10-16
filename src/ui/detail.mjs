@@ -8,16 +8,18 @@ import { sampleTrack, rangeRate, dopplerHz } from '../core/passes.mjs';
 import { REFERENCE_NOTE } from '../core/pointing.mjs';
 import { missionByNorad } from '../data/missions.mjs';
 import { labelText } from '../scene/labels-math.mjs';
+import { fadeLine, passWeatherNote } from './weather-model.mjs';
 
 const REFRESH_MS = 250;
 
-export function createDetail({ dashboard, orbitSource, station }) {
+export function createDetail({ dashboard, orbitSource, station, weather }) {
   const title = h('div', { class: 'row' });
   const list = h('dl');
   const plot = createSkyplot();
   const passLine = h('p', { class: 'note' });
   const entityNote = h('p', { class: 'note' });
-  const body = h('div', { class: 'detail' }, title, list, plot.canvas, passLine, entityNote,
+  const fadeNote = h('p', { class: 'note', 'data-weather-fade': '' });
+  const body = h('div', { class: 'detail' }, title, list, plot.canvas, passLine, fadeNote, entityNote,
     h('p', { class: 'note', text: TTC_STATEMENT }),
     h('p', { class: 'note', text: REFERENCE_NOTE }));
   dashboard.mount('detail', 'Detail', body, { order: 20 });
@@ -56,8 +58,8 @@ export function createDetail({ dashboard, orbitSource, station }) {
       const mission = norad != null ? missionByNorad(norad) : null;
       const s = schedule.satellites.find((x) => x.norad === norad);
       const omm = orbitSource.current().records.find((r) => r.NORAD_CAT_ID === norad);
-      if (!mission || !s || !omm) { title.replaceChildren(h('span', { class: 'muted', text: 'No satellite selected' })); list.replaceChildren(); plot.canvas.hidden = true; return; }
-      plot.canvas.hidden = false; setText(entityNote, ''); shownKey = `sat:${norad}`;
+      if (!mission || !s || !omm) { title.replaceChildren(h('span', { class: 'muted', text: 'No satellite selected' })); list.replaceChildren(); plot.canvas.hidden = true; setText(passLine, ''); setText(fadeNote, ''); return; }
+      plot.canvas.hidden = false; setText(entityNote, ''); setText(fadeNote, weather ? fadeLine(weather.current()) : ''); shownKey = `sat:${norad}`;
 
       const visible = s.elDeg != null && s.elDeg > 0;
       const dop = visible ? dopplerHz(mission.downlink.hz, rangeRate(s.sat, station.location, simMs)) : null;
@@ -72,7 +74,8 @@ export function createDetail({ dashboard, orbitSource, station }) {
         if (!tracks.has(p.id)) { if (tracks.size > 40) tracks.clear(); tracks.set(p.id, sampleTrack(s.sat, station.location, p.aos, p.los, 10)); }
         track = tracks.get(p.id);
         const when = new Date(p.aos).toISOString().slice(11, 16);
-        setText(passLine, `Pass: AOS ${when} UTC, max elevation ${p.maxElDeg.toFixed(0)}° (${pa.status === 'assigned' ? `served by ${pa.antennaId}` : 'not served'}). Doppler uses an illustrative 8 GHz X-band carrier.`);
+        const wx = passWeatherNote(pa);
+        setText(passLine, `Pass: AOS ${when} UTC, max elevation ${p.maxElDeg.toFixed(0)}° (${pa.status === 'assigned' ? `served by ${pa.antennaId}` : 'not served'}). Doppler uses an illustrative 8 GHz X-band carrier.${wx ? ` ${wx}` : ''}`);
       } else setText(passLine, 'No pass in the schedule window.');
       plot.draw(track, s.azDeg == null ? null : { azDeg: s.azDeg, elDeg: s.elDeg });
     },

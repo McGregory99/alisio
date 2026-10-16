@@ -125,3 +125,8 @@ html, body { overflow-x: hidden; }
   #element-label { bottom: calc(var(--disclaimer-h) + var(--sheet-h) + 56px) !important; max-width: calc(100vw - 32px) !important; }
   .hud[aria-label="Area"] { max-width: calc(100vw - 24px) !important; }
 }
+
+/* Weather selector (R8.1) */
+#dashboard .weather-options { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+#dashboard .weather-options label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+#dashboard .weather .note { font-size: 11px; color: var(--ink-dim); margin: 6px 0 0; }

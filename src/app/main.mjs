@@ -30,6 +30,9 @@ import { createGlobe } from '../ui/globe.mjs';
 import { createTables } from '../ui/tables.mjs';
 import { createLegend } from '../ui/legend.mjs';
 import { createSheet } from '../ui/sheet.mjs';
+import { createWeatherState, weatherAvailability, applyWeather } from '../core/weather.mjs';
+import { createWeatherFx } from '../scene/weather-fx.mjs';
+import { createWeatherSelect } from '../ui/weather-select.mjs';
 
 const clock = createSimClock();
 // No network on load: the live refresh only runs when the user asks (gated, see orbit-source).
@@ -37,17 +40,20 @@ const orbitSource = createOrbitSource({
   snapshot: SNAPSHOT, catalog: MISSIONS,
   fetchFn: (url) => fetch(url), storage: (() => { try { return localStorage; } catch { return null; } })(),
 });
-const schedule = createSchedule({ station: MASPALOMAS, getRecords: () => orbitSource.current().records });
+// Illustrative weather (not a live feed): clear by default; the availability predicate is injected into the scheduler.
+const weather = createWeatherState();
+const schedule = createSchedule({ station: MASPALOMAS, getRecords: () => orbitSource.current().records, isAvailable: weatherAvailability(weather.current) });
 const world = createWorld({
   container: document.getElementById('app'),
   getFrame: (dt) => {
     const simMs = clock.now();
-    return { simMs, dt, sun: sunAzEl(new Date(simMs), MASPALOMAS.location), schedule: schedule.update(simMs) };
+    return { simMs, dt, sun: sunAzEl(new Date(simMs), MASPALOMAS.location), schedule: applyWeather(schedule.update(simMs), weather.current(), MASPALOMAS) };
   },
 });
 const ctx = { ...world.ctx, station: MASPALOMAS };
 world.add(createTerrain(ctx));
-world.add(createEnv(ctx));
+world.add(createEnv({ ...ctx, weather }));
+const weatherFx = world.add(createWeatherFx({ ...ctx, weather }));
 const assets = world.add(createStationAssets(ctx));
 const egress = world.add(createEgress(ctx));
 const sky = world.add(createSky({ ...ctx, pivotOf: assets.pivotOf }));
@@ -74,7 +80,8 @@ const search = createSearch({
   onPick: (item) => { const t = allTargets().find((x) => (x.entity.id === item.id)); if (t) { labelsSys.show(t.entity); selection.flyToTarget(t); dashboard.select(t.entity); } },
 });
 const dashboard = world.add(createDashboard({ orbitSource }));
-world.add(createDetail({ dashboard, orbitSource, station: MASPALOMAS }));
+world.add(createDetail({ dashboard, orbitSource, station: MASPALOMAS, weather }));
+world.add(createWeatherSelect({ dashboard, weather, station: MASPALOMAS }));
 world.add(createTracker({ dashboard }));
 world.add(createGlobe({ dashboard, station: MASPALOMAS }));
 world.add(createTables({ dashboard, orbitSource, station: MASPALOMAS }));
@@ -82,4 +89,4 @@ createLegend({ dashboard });
 world.add(createSheet({ dashboard }));
 world.start();
 
-export { dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };
+export { weather, weatherFx, dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };

@@ -47,3 +47,42 @@ test('night sky colour stays distinguishable from black', () => {
   assert.notEqual(envFromSun(-40).skyHex, '#000000');
   assert.ok(parseInt(envFromSun(-40).skyHex.slice(5, 7), 16) >= 0x20); // blue channel floor
 });
+
+// R8.1: weather presets modulate the sun-driven environment (illustrative).
+import { weatherEnv, BASE_FOG } from '../../src/scene/env-math.mjs';
+import { weatherEffects } from '../../src/core/weather.mjs';
+
+const lum = (hex) => [1, 3, 5].reduce((s, i) => s + parseInt(hex.slice(i, i + 2), 16), 0);
+
+test('clear weather leaves the sun-driven environment untouched', () => {
+  const e = envFromSun(60);
+  const w = weatherEnv(e, weatherEffects('clear').visual);
+  assert.deepEqual([w.skyHex, w.fogHex, w.sunIntensity, w.ambient, w.starOpacity], [e.skyHex, e.fogHex, e.sunIntensity, e.ambient, e.starOpacity]);
+  assert.deepEqual([w.fogNear, w.fogFar], [BASE_FOG.near, BASE_FOG.far]);
+});
+
+test('each non-clear preset visibly changes the daytime environment', () => {
+  const e = envFromSun(60);
+  for (const id of ['calima', 'atlantic-rain', 'trade-wind']) {
+    const w = weatherEnv(e, weatherEffects(id).visual);
+    const changed = w.skyHex !== e.skyHex || w.sunIntensity !== e.sunIntensity || w.fogFar !== BASE_FOG.far;
+    assert.ok(changed, id);
+  }
+});
+
+test('calima thickens the air and dims the sun; rain greys and dims it most', () => {
+  const e = envFromSun(60);
+  const calima = weatherEnv(e, weatherEffects('calima').visual);
+  const rain = weatherEnv(e, weatherEffects('atlantic-rain').visual);
+  assert.ok(calima.fogFar < BASE_FOG.far * 0.5 && calima.fogNear < BASE_FOG.near);
+  assert.ok(calima.sunIntensity < e.sunIntensity);
+  assert.ok(rain.sunIntensity < calima.sunIntensity);
+});
+
+test('weather never brightens the night sky and clouds hide the stars', () => {
+  const night = envFromSun(-30);
+  const rain = weatherEnv(night, weatherEffects('atlantic-rain').visual);
+  assert.ok(lum(rain.skyHex) <= lum(night.skyHex) + 24);
+  assert.ok(rain.starOpacity < night.starOpacity);
+  assert.equal(rain.sunIntensity, 0);
+});

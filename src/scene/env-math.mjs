@@ -25,3 +25,26 @@ export function envFromSun(elDeg) {
     starOpacity: 1 - smooth(-18, -3, elDeg),
   };
 }
+
+export const BASE_FOG = Object.freeze({ near: 500, far: 2600 });
+
+/**
+ * Modulates the sun-driven parameters with an illustrative weather look (core/weather `visual`).
+ * The tint is darkened by the daylight level, so weather never brightens the night sky.
+ */
+export function weatherEnv(e, visual, base = BASE_FOG) {
+  const day = Math.min(1, e.sunIntensity / 2.4);
+  const tint = mix(NIGHT, visual.tintHex, day);
+  const skyHex = visual.tintAmount > 0 ? mix(e.skyHex, tint, visual.tintAmount) : e.skyHex;
+  const fogHex = visual.tintAmount > 0 ? mix(e.fogHex, tint, Math.min(1, visual.tintAmount * 1.2)) : e.fogHex;
+  const hidden = Math.min(1, visual.cloudCover * 0.9 + visual.dust * 0.6);
+  return {
+    ...e,
+    skyHex, fogHex,
+    sunIntensity: e.sunIntensity * visual.sunScale,
+    ambient: e.ambient * visual.ambientScale,
+    starOpacity: e.starOpacity * (1 - hidden),
+    fogNear: base.near * visual.fogNearScale,
+    fogFar: base.far * visual.fogFarScale,
+  };
+}
