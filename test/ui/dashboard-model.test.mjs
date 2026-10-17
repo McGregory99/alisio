@@ -123,3 +123,20 @@ test('with nothing finished the volume delta says so instead of inventing a tren
   assert.equal(volume.delta.text, 'no finished passes in 24 h');
   assert.equal(cards.find((c) => c.id === 'countdown').text, '--');
 });
+
+test('sparkline cards say where "now" sits on their x axis', () => {
+  const now = Date.UTC(2026, 9, 15, 6);
+  const by = Object.fromEntries(kpiCards([], now).map((c) => [c.id, c]));
+  assert.equal(by.today.markAt, 0.25);
+  assert.equal(by.active.markAt, 0.5);
+  assert.equal(by.volume.markAt, 1);
+});
+
+test('countdown card names the next mission and fills a progress bar over the last 90 minutes', () => {
+  const now = Date.UTC(2026, 9, 15, 12);
+  const pass = { id: 'n', norad: 42063, aos: now + 45 * 60_000, los: now + 55 * 60_000 };
+  const c = kpiCards([pass], now).find((x) => x.id === 'countdown');
+  assert.match(c.sub, /12:45 UTC - Sentinel-2B$/);
+  assert.equal(c.progress, 0.5);
+  assert.equal(kpiCards([], now).find((x) => x.id === 'countdown').progress, 0);
+});

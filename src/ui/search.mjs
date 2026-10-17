@@ -1,19 +1,20 @@
 // Search box (R6.3): `/` focuses it, results filter as you type, Enter or click flies to the result,
 // Escape closes. Fully keyboard operable (arrow keys move the highlighted option).
 import { matchItems } from './search-match.mjs';
-import { injectBaseStyle } from './base-style.mjs';
+import { icon } from './icons.mjs';
 
 export function createSearch({ items, onPick }) {
-  injectBaseStyle();
   const root = document.createElement('div');
-  root.className = 'hud'; root.style.cssText = 'left:12px;top:12px;width:260px';
+  root.id = 'search-hud'; root.className = 'search';
   const input = document.createElement('input');
-  input.type = 'search'; input.placeholder = 'Search ( / )'; input.autocomplete = 'off'; input.style.width = '100%'; input.style.boxSizing = 'border-box';
+  input.type = 'search'; input.placeholder = 'Search satellites, antennas, sites'; input.autocomplete = 'off';
   input.setAttribute('role', 'combobox'); input.setAttribute('aria-label', 'Search satellites, antennas and facilities');
   input.setAttribute('aria-expanded', 'false'); input.setAttribute('aria-controls', 'search-results');
   const list = document.createElement('ul');
   list.id = 'search-results'; list.setAttribute('role', 'listbox'); list.hidden = true;
-  root.append(input, list);
+  const glyph = icon('search'); glyph.classList.add('glyph');
+  const hint = document.createElement('kbd'); hint.textContent = '/'; hint.setAttribute('aria-hidden', 'true');
+  root.append(glyph, input, hint, list);
   document.body.appendChild(root);
 
   let hits = [], active = 0;

@@ -16,3 +16,12 @@ export function h(tag, attrs = {}, ...children) {
 export function setText(el, text) {
   if (el.textContent !== text) el.textContent = text;
 }
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+/** svg('path', { d: '...' }, ...children): an SVG element with attributes. */
+export function svg(tag, attrs = {}, ...children) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) if (v != null && v !== false) el.setAttribute(k, v === true ? '' : v);
+  el.append(...children);
+  return el;
+}

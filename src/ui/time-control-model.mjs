@@ -17,3 +17,12 @@ export const formatUtc = (ms) => `${new Date(ms).toISOString().slice(0, 19).repl
 export function nextPassTarget(assignments, nowMs) {
   return nextPassTime(assignments.filter((a) => a.status === 'assigned').map((a) => a.pass), nowMs);
 }
+
+/** Top bar clock: UTC time and date plus the mode (live, simulated at a rate, or paused). `state`: { live, paused, rate }. */
+export function clockChip({ live, paused, rate }, simMs) {
+  const iso = new Date(simMs).toISOString();
+  const base = { time: iso.slice(11, 19), date: iso.slice(0, 10) };
+  if (paused) return { ...base, mode: 'PAUSED', tone: 'paused' };
+  if (live) return { ...base, mode: 'LIVE', tone: 'live' };
+  return { ...base, mode: `SIM x${rate}`, tone: 'sim' };
+}

@@ -1,16 +1,16 @@
-// Time control (R6.5, R6.6): Live, 10x/60x/600x, Pause and Next pass, with the simulated UTC time.
-// Native buttons: focusable, Enter/Space activate, visible focus ring from base-style.
-import { injectBaseStyle } from './base-style.mjs';
-import { timeButtons, formatUtc, nextPassTarget } from './time-control-model.mjs';
+// Time control (R6.5, R6.6): Live, 10x/60x/600x, Pause and Next pass, plus the UTC clock chip for the top bar.
+// Native buttons: focusable, Enter/Space activate, visible focus ring from styles.css.
+// The dashboard adopts both elements (#time-control into the dock, #clock-chip into the top bar).
+import { timeButtons, nextPassTarget, clockChip } from './time-control-model.mjs';
+import { h, setText } from './dom.mjs';
 
 export function createTimeControl({ clock }) {
-  injectBaseStyle();
-  const root = document.createElement('div');
-  root.className = 'hud'; root.id = 'time-control'; root.setAttribute('role', 'group'); root.setAttribute('aria-label', 'Time control');
-  root.style.cssText = 'left:50%;transform:translateX(-50%);bottom:40px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;max-width:94vw';
-  const clockText = document.createElement('span');
-  clockText.style.cssText = 'padding:6px 10px;border-radius:8px;background:rgba(12,18,28,.8);font-variant-numeric:tabular-nums';
-  root.append(clockText);
+  const root = h('div', { id: 'time-control', class: 'timebar', role: 'group', 'aria-label': 'Time control' });
+
+  const time = h('span', { class: 't' });
+  const mode = h('span');
+  const dot = h('i');
+  const chip = h('div', { id: 'clock-chip', class: 'clock-chip', role: 'timer', 'aria-label': 'Simulated UTC time' }, time, h('div', { class: 's' }, dot, mode, h('span', { text: 'UTC' })));
 
   const actions = {
     live: () => clock.goLive(),
@@ -18,26 +18,26 @@ export function createTimeControl({ clock }) {
   };
   const buttons = new Map();
   for (const b of timeButtons(clock)) {
-    const el = document.createElement('button');
-    el.type = 'button'; el.textContent = b.label; el.dataset.id = b.id;
+    const el = h('button', { type: 'button', 'data-id': b.id, text: b.label });
     el.addEventListener('click', () => (actions[b.id] ?? (() => { clock.setRate(Number(b.id.slice(5))); if (clock.isPaused()) clock.resume(); }))());
     buttons.set(b.id, el); root.append(el);
   }
-  const next = document.createElement('button');
-  next.type = 'button'; next.textContent = 'Next pass'; next.dataset.id = 'next-pass';
+  const next = h('button', { type: 'button', 'data-id': 'next-pass', text: 'Next pass' });
   let lastAssignments = [];
   next.addEventListener('click', () => {
     const t = nextPassTarget(lastAssignments, clock.now());
     if (t != null) clock.seek(t);
   });
   root.append(next);
-  document.body.appendChild(root);
+  document.body.append(chip, root);
 
   return {
-    root,
+    root, chip,
     update({ simMs, schedule }) {
       lastAssignments = schedule.assignments;
-      clockText.textContent = formatUtc(simMs);
+      const c = clockChip({ live: clock.isLive(), paused: clock.isPaused(), rate: clock.rate() }, simMs);
+      setText(time, c.time); setText(mode, c.mode); chip.dataset.tone = c.tone;
+      chip.title = `${c.date} UTC`;
       for (const b of timeButtons(clock)) buttons.get(b.id).setAttribute('aria-pressed', String(b.pressed));
       next.disabled = nextPassTarget(lastAssignments, simMs) == null;
     },

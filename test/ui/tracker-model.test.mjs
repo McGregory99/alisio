@@ -101,3 +101,12 @@ test('current pass card prefers the pass in flight, then the next served one, an
   assert.equal(later.live, false);
   assert.equal(currentPassCard({ assignments: [A(P(S2B, 12 * 60 + 50), null)], finished: [] }, NOW), null);
 });
+
+test('stepper fill is the share of the step track already travelled', () => {
+  const pass = P(S1C, 12 * 60 + 10, 10);
+  const fill = (min) => passStepper(pass, min * MIN).fill;
+  assert.equal(fill(12 * 60), 0);
+  assert.equal(fill(12 * 60 + 9), 0.375); // halfway through the 2 min pre-position: (1 + 0.5) / 4
+  assert.equal(fill(12 * 60 + 15), 0.625); // halfway through the downlink: (2 + 0.5) / 4
+  assert.equal(fill(12 * 60 + 22), 1);
+});

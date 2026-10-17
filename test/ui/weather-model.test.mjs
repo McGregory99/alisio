@@ -34,3 +34,12 @@ test('pass weather note explains unserved and degraded passes, and is empty othe
   assert.equal(passWeatherNote({ status: 'assigned' }), '');
   assert.equal(passWeatherNote(undefined), '');
 });
+
+import { weatherChip } from '../../src/ui/weather-model.mjs';
+
+test('weather chip gives the preset label and wind, and flags illustrative values', () => {
+  const c = weatherChip('clear');
+  assert.equal(typeof c.label, 'string');
+  assert.match(c.wind, /^Wind \d+ km\/h$/);
+  assert.equal(c.note, 'illustrative');
+});

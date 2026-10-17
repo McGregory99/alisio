@@ -65,3 +65,11 @@ export function unproject(x, y, centre, radius) {
   const lon = centre.lonDeg * RAD + Math.atan2(px * Math.sin(c), rho * Math.cos(lat0) * Math.cos(c) - py * Math.sin(lat0) * Math.sin(c));
   return { latDeg: lat / RAD, lonDeg: ((lon / RAD + 540) % 360) - 180 };
 }
+
+/** Point `distDeg` of arc away from `from` along `bearingDeg` (clockwise from north), on a sphere. */
+export function destination(from, bearingDeg, distDeg) {
+  const lat1 = from.latDeg * RAD, lon1 = from.lonDeg * RAD, b = bearingDeg * RAD, d = distDeg * RAD;
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(b));
+  const lon2 = lon1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2));
+  return { latDeg: lat2 / RAD, lonDeg: ((lon2 / RAD + 540) % 360) - 180 };
+}

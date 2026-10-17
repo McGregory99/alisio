@@ -34,14 +34,16 @@ export function passTable(schedule, nowMs) {
     const mission = missionByNorad(pass.norad);
     rows.push({
       id: pass.id, norad: pass.norad, name: mission?.name ?? String(pass.norad), aos: pass.aos, aosUtc: utcTime(pass.aos), losUtc: utcTime(pass.los),
+      band: mission?.downlink?.band ?? '--', rateMbps: mission?.downlink?.rateMbps ?? null,
       durationS: Math.round((pass.los - pass.aos) / 1000), maxElDeg: Math.round(pass.maxElDeg),
       antenna: antennaId ?? 'unserved', phase: phaseAt(pass, nowMs) ?? 'scheduled', provenance: mission?.provenance ?? 'illustrative',
     });
   }
   return {
     columns: [
-      { key: 'name', label: 'Mission' }, { key: 'aos', label: 'AOS', field: 'aosUtc' },
-      { key: 'maxElDeg', label: 'Max el', numeric: true }, { key: 'antenna', label: 'Antenna' }, { key: 'phase', label: 'State' },
+      { key: 'name', label: 'Mission', strong: true }, { key: 'band', label: 'Band', chip: 'band' }, { key: 'phase', label: 'State', chip: 'phase' },
+      { key: 'aos', label: 'AOS', field: 'aosUtc' }, { key: 'los', label: 'LOS', field: 'losUtc' },
+      { key: 'maxElDeg', label: 'Max el', numeric: true }, { key: 'antenna', label: 'Antenna' },
     ],
     rows: sortRows(rows, 'aos', 'asc'),
   };
@@ -54,8 +56,8 @@ export function antennaTable(station) {
   }));
   return {
     columns: [
-      { key: 'id', label: 'Antenna' }, { key: 'diameterM', label: 'Dia (m)', numeric: true }, { key: 'rx', label: 'Rx' },
-      { key: 'tx', label: 'Tx' }, { key: 'roles', label: 'Roles' }, { key: 'provenance', label: 'Provenance', badge: true },
+      { key: 'id', label: 'Antenna', strong: true }, { key: 'diameterM', label: 'Dia (m)', numeric: true }, { key: 'rx', label: 'Rx', chip: 'band-list' },
+      { key: 'tx', label: 'Tx', chip: 'band-list' }, { key: 'roles', label: 'Roles' }, { key: 'provenance', label: 'Provenance', badge: true },
     ],
     rows,
   };
@@ -76,8 +78,8 @@ export function satelliteTable({ missions, records, nowDate, states }) {
   });
   return {
     columns: [
-      { key: 'name', label: 'Mission' }, { key: 'norad', label: 'NORAD', numeric: true }, { key: 'epochAgeDays', label: 'Epoch age (d)', numeric: true },
-      { key: 'epochState', label: 'Epoch' }, { key: 'elDeg', label: 'El', numeric: true }, { key: 'provenance', label: 'Provenance', badge: true },
+      { key: 'name', label: 'Mission', strong: true }, { key: 'norad', label: 'NORAD', numeric: true }, { key: 'epochAgeDays', label: 'Epoch age (d)', numeric: true },
+      { key: 'epochState', label: 'Epoch', chip: 'epoch' }, { key: 'elDeg', label: 'El', numeric: true }, { key: 'provenance', label: 'Provenance', badge: true },
     ],
     rows,
   };

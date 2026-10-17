@@ -32,8 +32,8 @@ export function trackerRows(schedule, nowMs, { limit = 8 } = {}) {
 
 const STEP_DEFS = [
   { id: 'scheduled', label: 'Scheduled', at: () => null },
-  { id: 'pre-position', label: 'Pre-position', at: (p) => p.aos - PREPOSITION_MS },
-  { id: 'downlink', label: 'Downlink (AOS)', at: (p) => p.aos },
+  { id: 'pre-position', label: 'Pointing', at: (p) => p.aos - PREPOSITION_MS },
+  { id: 'downlink', label: 'Downlink', at: (p) => p.aos },
   { id: 'los', label: 'LOS', at: (p) => p.los },
   { id: 'delivered', label: 'Delivered', at: (p) => p.los + LOS_HOLD_MS },
 ];
@@ -51,7 +51,12 @@ export function passStepper(pass, nowMs) {
     return { id: d.id, label: d.label, at, timeUtc: at == null ? null : utcSeconds(at), active: i === activeIndex, done: i < activeIndex || (i === 4 && activeIndex === 4) };
   });
   const progress = Math.min(1, Math.max(0, (nowMs - pass.aos) / (pass.los - pass.aos)));
-  return { steps, activeIndex, progress, losInMs: nowMs >= pass.aos && nowMs < pass.los ? pass.los - nowMs : null };
+  // Fraction of the step track (first dot to last dot) already travelled: whole stages plus the part of the current one.
+  const spans = [null, PREPOSITION_MS, pass.los - pass.aos, LOS_HOLD_MS];
+  const into = [null, nowMs - (pass.aos - PREPOSITION_MS), nowMs - pass.aos, nowMs - pass.los][activeIndex];
+  const inner = into == null ? 0 : Math.min(1, Math.max(0, into / spans[activeIndex]));
+  const fill = Math.min(1, (activeIndex + (activeIndex === 4 ? 0 : inner)) / 4);
+  return { steps, activeIndex, progress, fill, losInMs: nowMs >= pass.aos && nowMs < pass.los ? pass.los - nowMs : null };
 }
 
 /** The pass the big card shows: the served pass in flight, else the next served one; null when none. */

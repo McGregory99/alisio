@@ -68,3 +68,14 @@ test('unproject inverts project on the visible disc and rejects points outside i
   assert.equal(unproject(120, 0, centre, 100), null);
   assert.deepEqual(unproject(0, 0, centre, 100), centre);
 });
+
+import { destination } from '../../src/ui/globe-math.mjs';
+
+test('destination moves along a bearing: north raises latitude, east keeps it near, a full circle returns', () => {
+  const a = destination({ latDeg: 10, lonDeg: 20 }, 0, 5);
+  assert.ok(Math.abs(a.latDeg - 15) < 1e-9 && Math.abs(a.lonDeg - 20) < 1e-9);
+  const e = destination({ latDeg: 0, lonDeg: 0 }, 90, 10);
+  assert.ok(Math.abs(e.lonDeg - 10) < 1e-9 && Math.abs(e.latDeg) < 1e-9);
+  const w = destination({ latDeg: 0, lonDeg: 175 }, 90, 10);
+  assert.ok(Math.abs(w.lonDeg + 175) < 1e-9, 'wraps across the antimeridian');
+});
