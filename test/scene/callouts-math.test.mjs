@@ -85,10 +85,13 @@ test('chipShown: pipeline and egress chips need the processing view or a selecti
   assert.equal(chipShown({ ...p, id: 'p', selectedId: 'p' }), true);
 });
 
-test('chipShown: technical notes show only when selected or hovered, never by distance', () => {
+test('chipShown: technical notes show only in the view they explain, never by distance', () => {
   const n = { ...base, note: true, dist: 10 };
-  assert.equal(chipShown(n), false);
-  assert.equal(chipShown({ ...n, id: 'n', hoveredId: 'n' }), true);
+  assert.equal(chipShown({ ...n, id: 'coast-note' }), false);
+  assert.equal(chipShown({ ...n, id: 'coast-note', view: 'coast' }), true);
+  assert.equal(chipShown({ ...n, id: 'coast-note', view: 'orbit' }), false);
+  assert.equal(chipShown({ ...n, id: 'sky-note', view: 'orbit' }), true);
+  assert.equal(chipShown({ ...n, id: 'other-note', view: 'campus', hoveredId: 'other-note' }), true);
 });
 
 test('activeAnchorIds: the antennas of running lanes and their satellites', () => {

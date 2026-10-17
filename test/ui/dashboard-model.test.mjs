@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatCountdown, sourceModel, refreshOutcomeText, kpiRows } from '../../src/ui/dashboard-model.mjs';
+import { formatCountdown, sourceModel, refreshOutcomeText, kpiRows, kpiChips } from '../../src/ui/dashboard-model.mjs';
 
 const NOW = new Date('2026-10-15T12:00:00Z');
 const data = (epochs, source = 'snapshot') => ({ source, fetchedAt: '2026-10-15T11:29:34Z', records: epochs.map((EPOCH) => ({ EPOCH })) });
@@ -139,4 +139,20 @@ test('countdown card names the next mission and fills a progress bar over the la
   assert.match(c.sub, /12:45 UTC - Sentinel-2B$/);
   assert.equal(c.progress, 0.5);
   assert.equal(kpiCards([], now).find((x) => x.id === 'countdown').progress, 0);
+});
+
+test('kpiChips: next AOS, active passes and passes today, in that order, as short label/value pairs', () => {
+  const cards = [
+    { id: 'today', num: 14 }, { id: 'countdown', text: '12:34' }, { id: 'active', num: 1 },
+    { id: 'volume', num: 900, unit: 'GB' }, { id: 'timeliness', finished: 0 },
+  ];
+  assert.deepEqual(kpiChips(cards), [
+    { id: 'countdown', label: 'Next AOS', value: '12:34' },
+    { id: 'active', label: 'Active', value: '1' },
+    { id: 'today', label: 'Today', value: '14' },
+  ]);
+});
+
+test('kpiChips: a missing card shows a dash instead of failing', () => {
+  assert.deepEqual(kpiChips([]).map((c) => c.value), ['--', '--', '--']);
 });

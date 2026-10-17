@@ -121,3 +121,14 @@ export function kpiCards(passes, nowMs) {
     },
   ];
 }
+
+const CHIPS = [['countdown', 'Next AOS'], ['active', 'Active'], ['today', 'Today']];
+
+/** The three slim KPI chips shown under the top bar, from the `kpiCards()` result. */
+export function kpiChips(cards) {
+  const byId = new Map(cards.map((c) => [c.id, c]));
+  return CHIPS.map(([id, label]) => {
+    const c = byId.get(id);
+    return { id, label, value: c?.text ?? (c?.num != null ? String(c.num) : '--') };
+  });
+}

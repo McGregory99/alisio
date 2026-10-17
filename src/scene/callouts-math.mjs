@@ -37,12 +37,14 @@ export function activeAnchorIds(lanes) {
 
 /**
  * Whether an anchor's chip is drawn at all. Default scene: only the selected or hovered object and the active-pass
- * antenna and satellite. Others appear when the camera is close. Notes show on selection or hover only; pipeline and
- * egress chips (`processing`) also show in the processing view.
+ * antenna and satellite. Others appear when the camera is close. Notes show only in the view they explain (the coast
+ * note on the coast view, the sky note on the orbit view); pipeline and egress chips (`processing`) in the processing view.
  */
+const NOTE_VIEWS = { 'coast-note': 'coast', 'sky-note': 'orbit' };
+
 export function chipShown({ id, selectedId, hoveredId, activeIds, view, dist, maxDist, processing, note }) {
   if (id === selectedId || id === hoveredId) return true;
-  if (note) return false;
+  if (note) return NOTE_VIEWS[id] === view;
   if (processing) return view === 'processing';
   if (activeIds?.has(id)) return true;
   return dist <= closeDist(maxDist);
