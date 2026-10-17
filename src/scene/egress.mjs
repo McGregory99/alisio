@@ -2,7 +2,7 @@
 import { entitiesFromStation } from '../core/station-entities.mjs';
 import { egressPath } from './station-assets-math.mjs';
 import { terrainHeight } from './terrain-math.mjs';
-import { textSprite } from './labels.mjs';
+import { registerAnchor } from './callouts-registry.mjs';
 
 const HEADING_RAD = (3 * Math.PI) / 2; // west, away from the coast; illustrative direction
 const LENGTH_M = 520, STEP_M = 20;
@@ -24,11 +24,13 @@ export function createEgress({ THREE, scene, station }) {
   group.add(trench, fibre);
 
   const end = pts[pts.length - 1];
-  const label = textSprite(THREE, `${link.label} (generic)`);
-  label.position.set(end.x, end.y + 22, end.z);
-  group.add(label);
+  registerAnchor(scene, {
+    id: link.id, maxDist: 1400,
+    point: () => ({ x: end.x, y: end.y + 14, z: end.z }),
+    content: () => ({ title: `${link.label} (generic)`, tone: 'note', provenance: link.provenance, entityId: link.id, priority: 45 }),
+  });
   group.userData.entityId = link.id;
   scene.add(group);
 
-  return { link, group, label, path: pts, pickables: [group], update() {} };
+  return { link, group, path: pts, pickables: [group], update() {} };
 }

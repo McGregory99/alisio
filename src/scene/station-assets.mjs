@@ -5,6 +5,8 @@ import { entitiesFromStation } from '../core/station-entities.mjs';
 import { dimsForAntenna } from './station-assets-math.mjs';
 import { terrainHeight } from './terrain-math.mjs';
 import { envFromSun } from './env-math.mjs';
+import { registerAnchor } from './callouts-registry.mjs';
+import { dishContent } from './callouts-math.mjs';
 
 export function createStationAssets({ THREE, scene, station }) {
   const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, flatShading: true, ...o });
@@ -42,7 +44,7 @@ export function createStationAssets({ THREE, scene, station }) {
     }
     const feed = cyl(0.32 * s, 0.55 * s, 1.2 * s, white, 10); feed.rotation.x = Math.PI / 2; feed.position.copy(focus); elG.add(feed);
     elG.rotation.x = -Math.PI / 2; // stowed pointing at zenith; slice 6b drives az/el
-    return { root, azG, elG, pivotH: d.pivotH };
+    return { root, azG, elG, pivotH: d.pivotH, feedM: 1.4 * s + f };
   }
 
   function place(obj, e, yOff = 0) {
@@ -69,11 +71,24 @@ export function createStationAssets({ THREE, scene, station }) {
   const entities = entitiesFromStation(station);
   for (const e of entities) {
     const g = new THREE.Group();
+    if (e.kind === 'facility') {
+      registerAnchor(scene, {
+        id: e.id, maxDist: 520,
+        point: () => ({ x: e.position.x, y: terrainHeight(e.position.x, e.position.z) + 17, z: e.position.z }),
+        content: () => ({ title: e.label, tone: 'facility', provenance: e.provenance, entityId: e.id, priority: 30 }),
+      });
+    }
     if (e.kind === 'antenna') {
       const m = makeDish(e); g.add(m.root);
       const pad = cyl(e.diameterM * 0.7, e.diameterM * 0.75, 0.6, mat('#CAC5BD'), 24); pad.position.y = 0.3; g.add(pad);
       place(g, e);
       dishes.set(e.id, { ...m, entity: e, group: g });
+      const top = terrainHeight(e.position.x, e.position.z) + m.pivotH + e.diameterM / 2 + 3;
+      registerAnchor(scene, {
+        id: e.id, maxDist: 1500,
+        point: () => ({ x: e.position.x, y: top, z: e.position.z }),
+        content: (frame) => ({ ...dishContent(e.id, frame?.schedule?.lanes?.get(e.id) ?? null), provenance: e.provenance, entityId: e.id }),
+      });
       addLight(e.position.x + 6, terrainHeight(e.position.x, e.position.z) + 6, e.position.z + 6, '#ffe2a8', 14);
     } else if (e.kind === 'facility' && e.facilityKind === 'radome') {
       const shell = mesh(new THREE.IcosahedronGeometry(7.4, 2), mat('#F6F5F1', { transparent: true, opacity: 0.92 })); shell.position.y = 6.3; g.add(shell);
@@ -102,7 +117,7 @@ export function createStationAssets({ THREE, scene, station }) {
   function pivotOf(id) {
     const d = dishes.get(id);
     if (!d) return { x: 0, y: terrainHeight(0, 0), z: 0 };
-    return { x: d.group.position.x, y: d.group.position.y + d.pivotH, z: d.group.position.z };
+    return { x: d.group.position.x, y: d.group.position.y + d.pivotH, z: d.group.position.z, feedM: d.feedM };
   }
 
   return {
