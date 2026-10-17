@@ -36,10 +36,14 @@ test('disclaimer is always visible: fixed, never hidden, above panels', () => {
   assert.ok(z >= 100, 'disclaimer must sit above panels and the sheet');
 });
 
+// README screenshots of the app itself; the rule below is about logos in the product.
+const DOC_SCREENSHOTS = join(ROOT, 'docs', 'img');
+
 function* walk(dir) {
   for (const name of readdirSync(dir)) {
     if (['.git', 'node_modules', 'vendor'].includes(name)) continue;
     const p = join(dir, name);
+    if (p === DOC_SCREENSHOTS) continue;
     if (statSync(p).isDirectory()) yield* walk(p); else yield p;
   }
 }
