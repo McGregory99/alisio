@@ -4,7 +4,9 @@
 // a band-coloured beam from the dish feed to it (links.mjs).
 import { skyPoint, SKY_RADIUS } from './sky-math.mjs';
 import { terrainHeight } from './terrain-math.mjs';
-import { makeSatModel } from './sat-model.mjs';
+import { createSentinelModel, orientForSky } from './sentinel-models.mjs';
+import { specFor, displayScale } from './sentinel-spec.mjs';
+import { glowTexture } from './fx-textures.mjs';
 import { createLinks } from './links.mjs';
 import { bandStyle } from './link-math.mjs';
 import { registerAnchor } from './callouts-registry.mjs';
@@ -21,12 +23,30 @@ export function createSky({ THREE, scene, station, pivotOf }) {
   const notePoint = skyPoint(origin(), 180, 6);
   registerAnchor(scene, { id: 'sky-note', point: () => notePoint, content: () => ({ title: 'Sky: directions only, not distances', tone: 'note', priority: 5 }), maxDist: 1600 });
 
+  // Real-scale spacecraft wrapped so nadir faces +z (lookAt target) and scaled up to read on the compressed sky.
+  function buildModel(mission) {
+    const spec = specFor(mission.id) ?? specFor(mission.family);
+    const aimed = new THREE.Group();
+    const sized = new THREE.Group();
+    sized.add(orientForSky(THREE, createSentinelModel(THREE, mission.id)));
+    sized.scale.setScalar(spec ? displayScale(spec) : 5.5);
+    aimed.add(sized);
+    return aimed;
+  }
+  function makeHalo() {
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(THREE), color: '#4fd8ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    halo.scale.setScalar(36);
+    return halo;
+  }
+
   function item(s) {
     let it = items.get(s.norad);
     if (!it) {
       const root = new THREE.Group();
-      const { group: model, halo } = makeSatModel(THREE, s.mission.family);
-      const hit = new THREE.Mesh(new THREE.SphereGeometry(22, 8, 6), new THREE.MeshBasicMaterial({ visible: false })); // generous click target
+      const model = buildModel(s.mission);
+      const halo = makeHalo();
+      const hit = new THREE.Mesh(new THREE.SphereGeometry(32, 8, 6), new THREE.MeshBasicMaterial({ visible: false })); // generous click target
+      model.add(halo);
       root.add(model, hit);
       group.add(root);
       it = { root, model, halo, norad: s.norad };
