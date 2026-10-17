@@ -7,10 +7,12 @@ export function areasFor(station, { heightAt = () => 0 } = {}) {
   const antennas = entitiesFromStation(station).filter((e) => e.kind === 'antenna');
   const flagship = antennas.find((a) => a.flagship) ?? antennas[0];
   const fp = flagship?.position ?? { x: 0, z: 0 };
+  const hq = entitiesFromStation(station).find((e) => e.kind === 'facility' && e.facilityKind === 'building')?.position ?? { x: 0, z: 0 };
   return [
     { id: 'campus', label: 'Campus overview', target: { x: 0, y: heightAt(0, 0) + 10, z: 0 }, dist: 330, dirFrom: { x: -160, y: 110, z: 260 } },
     { id: 'flagship', label: 'Flagship dish', target: { x: fp.x, y: heightAt(fp.x, fp.z) + 8, z: fp.z }, dist: 80, dirFrom: { x: -1, y: 0.5, z: 1.2 } },
     { id: 'coast', label: 'Coast / sea', target: { x: 0, y: heightAt(0, COAST_Z) + 5, z: COAST_Z }, dist: 700, dirFrom: { x: 0, y: 0.45, z: -1 } },
+    { id: 'processing', label: 'Processing', target: { x: hq.x - 260, y: heightAt(hq.x - 260, hq.z) + 20, z: hq.z }, dist: 620, dirFrom: { x: 0.2, y: 0.5, z: 1 } },
     { id: 'orbit', label: 'Orbit view', target: { x: 0, y: 160, z: 0 }, dist: 1100, dirFrom: { x: 0, y: 1, z: 0.9 } },
   ];
 }

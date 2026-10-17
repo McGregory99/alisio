@@ -57,3 +57,65 @@ test('dishContent: pre-position and LOS phases are described honestly', () => {
   assert.equal(dishContent('MSP-15', { phase: 'pre-position', mission }).sub, 'Slewing to Sentinel-2B');
   assert.equal(dishContent('MSP-15', { phase: 'los', mission }).sub, 'LOS · Sentinel-2B');
 });
+
+import { chipShown, closeDist, activeAnchorIds, clampChip, hudRects } from '../../src/scene/callouts-math.mjs';
+
+const base = { id: 'x', selectedId: null, hoveredId: null, activeIds: new Set(), view: 'campus', dist: 900, maxDist: 1500, processing: false, note: false };
+
+test('chipShown: far chips with nothing special stay hidden', () => {
+  assert.equal(chipShown(base), false);
+});
+
+test('chipShown: the selected, the hovered and the active-pass anchors always show', () => {
+  assert.equal(chipShown({ ...base, id: 'a', selectedId: 'a' }), true);
+  assert.equal(chipShown({ ...base, id: 'a', hoveredId: 'a' }), true);
+  assert.equal(chipShown({ ...base, id: 'a', activeIds: new Set(['a']) }), true);
+});
+
+test('chipShown: other chips appear only when the camera is close', () => {
+  assert.equal(chipShown({ ...base, dist: closeDist(1500) - 1 }), true);
+  assert.equal(chipShown({ ...base, dist: closeDist(1500) + 1 }), false);
+  assert.ok(closeDist(520) < 520 && closeDist(5000) <= 240);
+});
+
+test('chipShown: pipeline and egress chips need the processing view or a selection, even when close', () => {
+  const p = { ...base, processing: true, dist: 10 };
+  assert.equal(chipShown(p), false);
+  assert.equal(chipShown({ ...p, view: 'processing' }), true);
+  assert.equal(chipShown({ ...p, id: 'p', selectedId: 'p' }), true);
+});
+
+test('chipShown: technical notes show only when selected or hovered, never by distance', () => {
+  const n = { ...base, note: true, dist: 10 };
+  assert.equal(chipShown(n), false);
+  assert.equal(chipShown({ ...n, id: 'n', hoveredId: 'n' }), true);
+});
+
+test('activeAnchorIds: the antennas of running lanes and their satellites', () => {
+  const lanes = new Map([['MSP-15', { pass: { norad: 42063 } }], ['MSP-9', { pass: { norad: 40697 } }]]);
+  assert.deepEqual([...activeAnchorIds(lanes)].sort(), ['MSP-15', 'MSP-9', 'sat-40697', 'sat-42063']);
+  assert.equal(activeAnchorIds(undefined).size, 0);
+});
+
+test('clampChip: a chip is pulled fully inside the viewport with a margin', () => {
+  const c = clampChip({ x: -20, y: 5, w: 100, h: 20 }, { width: 800, height: 600, margin: 6 });
+  assert.equal(c.x, 6 + 50); assert.equal(c.y, 6 + 10);
+  const d = clampChip({ x: 790, y: 599, w: 100, h: 20 }, { width: 800, height: 600, margin: 6 });
+  assert.equal(d.x, 800 - 6 - 50); assert.equal(d.y, 600 - 6 - 10);
+  const ok = clampChip({ x: 300, y: 300, w: 100, h: 20 }, { width: 800, height: 600 });
+  assert.deepEqual([ok.x, ok.y], [300, 300]);
+});
+
+test('placeChips: chips overlapping a blocked HUD rectangle are dropped, not drawn under it', () => {
+  const blocked = [{ left: 0, top: 0, right: 200, bottom: 100 }];
+  const kept = placeChips([chip('under', 100, 50, 9), chip('free', 400, 300, 1)], { maxChips: 10, width: 800, height: 600, blocked });
+  assert.deepEqual([...kept], ['free']);
+});
+
+test('hudRects: only visible, non-empty rectangles are returned', () => {
+  const els = [
+    { getBoundingClientRect: () => ({ left: 0, top: 0, right: 10, bottom: 10, width: 10, height: 10 }) },
+    { getBoundingClientRect: () => ({ left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 }) },
+  ];
+  assert.equal(hudRects(els).length, 1);
+});

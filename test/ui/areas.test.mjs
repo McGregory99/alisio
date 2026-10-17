@@ -7,8 +7,8 @@ import { COAST_Z } from '../../src/scene/terrain-math.mjs';
 
 const flat = () => 0;
 
-test('four presets: campus overview, flagship dish, coast/sea, orbit view', () => {
-  assert.deepEqual(areasFor(MASPALOMAS, { heightAt: flat }).map((a) => a.id), ['campus', 'flagship', 'coast', 'orbit']);
+test('five presets: campus overview, flagship dish, coast/sea, processing, orbit view', () => {
+  assert.deepEqual(areasFor(MASPALOMAS, { heightAt: flat }).map((a) => a.id), ['campus', 'flagship', 'coast', 'processing', 'orbit']);
 });
 
 test('the flagship preset targets the flagship antenna of the station data', () => {
@@ -30,4 +30,10 @@ test('every preset keeps its distance within the camera maximum', () => {
 test('stations are listed only when the data holds more than one', () => {
   assert.deepEqual(stationChoices([MASPALOMAS]), []);
   assert.deepEqual(stationChoices([MASPALOMAS, fixtureStation]).map((s) => s.id), ['MSP', 'FIX']);
+});
+
+test('the processing preset looks along the egress link, west of the campus building', () => {
+  const a = areasFor(MASPALOMAS, { heightAt: flat }).find((x) => x.id === 'processing');
+  assert.equal(a.label, 'Processing');
+  assert.ok(a.target.x < -100);
 });
