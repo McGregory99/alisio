@@ -28,3 +28,9 @@ export function passWeatherNote(assignment) {
   if (assignment?.weather === 'degraded') return `Degraded: ${assignment.fadeDb.toFixed(1)} dB X-band fade (illustrative).`;
   return '';
 }
+
+/** Compact chip content for the top bar: preset label, wind and the illustrative marking. */
+export function weatherChip(presetId) {
+  const w = weatherEffects(presetId);
+  return { id: presetId, label: w.label, wind: `Wind ${Math.round(w.windKmh)} km/h`, note: 'illustrative' };
+}

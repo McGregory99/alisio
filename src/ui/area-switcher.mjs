@@ -1,21 +1,19 @@
-// Area switcher (R6.4): preset buttons, plus a station list when the data holds more than one station.
-// Native buttons and select: Tab/Enter/Space/arrow keys work, focus ring from base-style.
-import { injectBaseStyle } from './base-style.mjs';
+// Area switcher (R6.4): preset tabs, plus a station list when the data holds more than one station.
+// Native buttons and select: Tab/Enter/Space/arrow keys work. The dashboard adopts the element into the top bar.
+import { h } from './dom.mjs';
 
 export function createAreaSwitcher({ areas, stations = [], onArea, onStation = () => {} }) {
-  injectBaseStyle();
-  const root = document.createElement('div');
-  root.className = 'hud'; root.setAttribute('role', 'group'); root.setAttribute('aria-label', 'Area');
-  root.style.cssText = 'left:12px;top:54px;display:flex;flex-wrap:wrap;gap:6px;max-width:300px';
+  const root = h('div', { id: 'area-switcher', class: 'areas', role: 'group', 'aria-label': 'Area' });
+  const buttons = new Map();
+  const show = (id) => { for (const [k, b] of buttons) b.setAttribute('aria-pressed', String(k === id)); };
   for (const a of areas) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.textContent = a.label; b.dataset.area = a.id;
-    b.addEventListener('click', () => onArea(a));
-    root.append(b);
+    const b = h('button', { type: 'button', 'data-area': a.id, text: a.label, 'aria-pressed': 'false' });
+    b.addEventListener('click', () => { show(a.id); onArea(a); });
+    buttons.set(a.id, b); root.append(b);
   }
+  if (areas[0]) show(areas[0].id); // the camera starts on the first preset
   if (stations.length) {
-    const sel = document.createElement('select');
-    sel.setAttribute('aria-label', 'Station');
+    const sel = h('select', { 'aria-label': 'Station' });
     for (const s of stations) sel.append(new Option(s.label, s.id));
     sel.addEventListener('change', () => onStation(sel.value));
     root.append(sel);

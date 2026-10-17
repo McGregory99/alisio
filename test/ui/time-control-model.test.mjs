@@ -42,3 +42,16 @@ test('next pass targets the earliest pre-position time of served passes only', (
   assert.equal(nextPassTarget(a, 0), 3_000_000 - 120_000);
   assert.equal(nextPassTarget([], 0), null);
 });
+
+import { clockChip } from '../../src/ui/time-control-model.mjs';
+
+test('clock chip shows UTC time and date, and says live, simulated (with rate) or paused', () => {
+  const ms = Date.parse('2026-10-15T19:02:19Z');
+  assert.deepEqual(clockChip({ live: true, paused: false, rate: 1 }, ms), { time: '19:02:19', date: '2026-10-15', mode: 'LIVE', tone: 'live' });
+  assert.equal(clockChip({ live: false, paused: false, rate: 60 }, ms).mode, 'SIM x60');
+  assert.equal(clockChip({ live: false, paused: false, rate: 60 }, ms).tone, 'sim');
+  assert.equal(clockChip({ live: false, paused: false, rate: 1 }, ms).mode, 'SIM x1');
+  const p = clockChip({ live: false, paused: true, rate: 600 }, ms);
+  assert.equal(p.mode, 'PAUSED');
+  assert.equal(p.tone, 'paused');
+});

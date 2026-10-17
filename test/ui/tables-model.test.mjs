@@ -70,3 +70,14 @@ test('pass table lists served and unserved passes with times and antenna', () =>
   assert.equal(t.rows[1].antenna, 'unserved');
   assert.equal(t.rows[0].maxElDeg, 55);
 });
+
+test('pass table carries the band, the illustrative rate and chip kinds for band and state columns', () => {
+  const p = { id: 'a', norad: 42063, aos: Date.parse('2026-10-15T12:00:00Z'), tca: Date.parse('2026-10-15T12:05:00Z'), los: Date.parse('2026-10-15T12:10:00Z'), maxElDeg: 55.4 };
+  const t = passTable({ assignments: [{ pass: p, antennaId: 'MSP-15', status: 'assigned' }], finished: [] }, p.aos - 1000);
+  assert.equal(t.rows[0].band, 'X');
+  assert.equal(t.rows[0].rateMbps, 560);
+  assert.equal(t.columns.find((c) => c.key === 'band').chip, 'band');
+  assert.equal(t.columns.find((c) => c.key === 'phase').chip, 'phase');
+  assert.ok(t.columns.some((c) => c.key === 'los' && c.field === 'losUtc'));
+  assert.equal(t.rows[0].losUtc, '12:10:00');
+});
