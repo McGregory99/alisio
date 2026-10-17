@@ -336,6 +336,10 @@ html[data-cinematic] :is(#topbar, #dashboard, #time-control, #follow-chip, #call
 /* Mid widths */
 @media (max-width: 1360px) {
   #tabbar .tab kbd { display: none; }
+  .tables-panel [data-col="maxElDeg"] { display: none; }
+  .drawer-body > .tables-panel { padding-left: 8px; padding-right: 8px; }
+  table.data td { padding: 5px 4px; }
+  table.data th button { padding: 6px 4px; }
 }
 @media (max-width: 1180px) {
   #topbar h1 small { display: none; }
