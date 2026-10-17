@@ -86,3 +86,29 @@ test('weather never brightens the night sky and clouds hide the stars', () => {
   assert.ok(rain.starOpacity < night.starOpacity);
   assert.equal(rain.sunIntensity, 0);
 });
+
+import { gradeFromSun, sunGlowStrength, domeColors } from '../../src/scene/env-math.mjs';
+
+test('gradeFromSun: warm at golden hour, cool at night, nearly neutral at noon; alpha stays subtle', () => {
+  const golden = gradeFromSun(3), night = gradeFromSun(-30), noon = gradeFromSun(60);
+  const [gr, , gb] = [1, 3, 5].map((i) => parseInt(golden.tintHex.slice(i, i + 2), 16));
+  const [nr, , nb] = [1, 3, 5].map((i) => parseInt(night.tintHex.slice(i, i + 2), 16));
+  assert.ok(gr > gb, 'golden tint is warm');
+  assert.ok(nb > nr, 'night tint is cool');
+  assert.ok(noon.tintAlpha < golden.tintAlpha);
+  for (const g of [golden, night, noon]) assert.ok(g.tintAlpha >= 0 && g.tintAlpha <= 0.22 && g.vignette >= 0 && g.vignette <= 0.5);
+});
+
+test('sunGlowStrength: none well below the horizon, strongest low in the sky', () => {
+  assert.equal(sunGlowStrength(-30), 0);
+  assert.ok(sunGlowStrength(4) > sunGlowStrength(60));
+  assert.ok(sunGlowStrength(60) > 0);
+});
+
+test('domeColors: horizon haze is lighter than the zenith by day and never brighter than fog at night', () => {
+  const day = domeColors('#8fb8d8', '#98bfdc');
+  const lum = (h) => parseInt(h.slice(1, 3), 16) + parseInt(h.slice(3, 5), 16) + parseInt(h.slice(5, 7), 16);
+  assert.ok(lum(day.bottom) >= lum(day.top));
+  assert.match(day.top, /^#[0-9a-f]{6}$/);
+  assert.equal(domeColors('#101a38', '#141e3c', 0).bottom, '#141e3c');
+});

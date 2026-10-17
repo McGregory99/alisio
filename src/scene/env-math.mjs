@@ -48,3 +48,26 @@ export function weatherEnv(e, visual, base = BASE_FOG) {
     fogFar: base.far * visual.fogFarScale,
   };
 }
+
+/** Subtle full-frame grade: tint colour/alpha and vignette strength from the sun elevation (all cheap, CSS-driven). */
+export function gradeFromSun(elDeg) {
+  const golden = Math.exp(-((elDeg - 3) * (elDeg - 3)) / 60); // peaks near sunrise/sunset
+  const night = 1 - smooth(-12, -2, elDeg);
+  const tintHex = night > golden ? '#3a56a8' : '#ff9a4a';
+  return {
+    tintHex,
+    tintAlpha: Math.min(0.22, 0.17 * Math.max(golden, night) + 0.01),
+    vignette: 0.18 + 0.2 * night,
+  };
+}
+
+/** Strength 0..1 of the sun glow painted on the sky dome: strongest low in the sky, faint at noon, none at night. */
+export function sunGlowStrength(elDeg) {
+  if (elDeg < -4) return 0;
+  return smooth(-4, 2, elDeg) * (0.4 + 0.6 * (1 - smooth(2, 30, elDeg)));
+}
+
+/** Sky dome gradient: zenith colour and a hazy horizon colour derived from the fog colour. */
+export function domeColors(skyHex, fogHex, day = 1) {
+  return { top: skyHex, bottom: mix(fogHex, '#ffffff', 0.12 * day) };
+}
