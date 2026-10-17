@@ -1,12 +1,11 @@
-// Detail card (R7.3, R5.7, R5.8): the selected satellite (or, until one is selected, the satellite of the running or
-// next served pass) with live look angles, Doppler, orbit data and a polar sky plot, plus the antenna utilisation bars.
+// Detail card (R7.3, R5.7, R5.8): shown only while a satellite or antenna is selected. A satellite gets live look angles,
+// Doppler, orbit data and a polar sky plot; the antenna utilisation bars sit below. The dashboard shows and hides the panel.
 import { h, setText } from './dom.mjs';
 import { badge } from './badge.mjs';
-import { detailRows, TTC_STATEMENT } from './detail-model.mjs';
+import { detailRows } from './detail-model.mjs';
 import { createSkyplot } from './skyplot.mjs';
 import { antennaUtilisation } from './utilisation-model.mjs';
 import { sampleTrack, rangeRate, dopplerHz } from '../core/passes.mjs';
-import { REFERENCE_NOTE } from '../core/pointing.mjs';
 import { missionByNorad } from '../data/missions.mjs';
 import { labelText } from '../scene/labels-math.mjs';
 import { fadeLine, passWeatherNote } from './weather-model.mjs';
@@ -31,8 +30,7 @@ export function createDetail({ dashboard, orbitSource, station, weather }) {
   }));
   const util = h('div', { class: 'util', role: 'group', 'aria-label': 'Antenna utilisation, 24 hour window centred on now' },
     h('p', { class: 'eyebrow', text: 'Antenna utilisation, +-12 h (simulated schedule)' }), ...[...utilRows.values()].map((r) => r.el));
-  const notes = h('details', {}, h('summary', { text: 'Notes and assumptions' }), h('p', { text: TTC_STATEMENT }), h('p', { text: REFERENCE_NOTE }));
-  const body = h('div', { class: 'detail' }, title, hero, grid, passLine, fadeNote, entityNote, util, notes);
+  const body = h('div', { class: 'detail' }, title, hero, grid, passLine, fadeNote, entityNote, util);
   dashboard.mount('detail', 'Detail', body, { order: 20 });
 
   const tracks = new Map(); // pass id -> samples
@@ -40,13 +38,6 @@ export function createDetail({ dashboard, orbitSource, station, weather }) {
   dashboard.onSelect(() => { acc = REFRESH_MS; });
 
   const noradOf = (entity) => (entity?.kind === 'satellite' ? Number(String(entity.id).replace('sat-', '')) : null);
-
-  function defaultNorad(schedule, simMs) {
-    const lane = [...schedule.lanes.values()][0];
-    if (lane) return lane.pass.norad;
-    const next = schedule.assignments.find((a) => a.status === 'assigned' && a.pass.los >= simMs);
-    return next?.pass.norad ?? null;
-  }
 
   function showEntity(entity) {
     const t = labelText(entity);
@@ -72,10 +63,11 @@ export function createDetail({ dashboard, orbitSource, station, weather }) {
       acc += Math.max(0, dt) * 1000;
       if (acc < REFRESH_MS) return;
       acc = 0;
-      showUtilisation(schedule, simMs);
       const sel = dashboard.selected();
-      if (sel && sel.kind !== 'satellite') { if (shownKey !== `entity:${sel.id}`) showEntity(sel); return; }
-      const norad = noradOf(sel) ?? defaultNorad(schedule, simMs);
+      if (!sel) return; // nothing selected: the panel is hidden
+      showUtilisation(schedule, simMs);
+      if (sel.kind !== 'satellite') { if (shownKey !== `entity:${sel.id}`) showEntity(sel); return; }
+      const norad = noradOf(sel);
       const mission = norad != null ? missionByNorad(norad) : null;
       const s = schedule.satellites.find((x) => x.norad === norad);
       const omm = orbitSource.current().records.find((r) => r.NORAD_CAT_ID === norad);

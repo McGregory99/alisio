@@ -29,7 +29,6 @@ import { createTracker } from '../ui/tracker.mjs';
 import { createGlobe } from '../ui/globe.mjs';
 import { createTables } from '../ui/tables.mjs';
 import { createLegend } from '../ui/legend.mjs';
-import { createSheet } from '../ui/sheet.mjs';
 import { createWeatherState, weatherAvailability, applyWeather } from '../core/weather.mjs';
 import { createWeatherFx } from '../scene/weather-fx.mjs';
 import { createWeatherSelect } from '../ui/weather-select.mjs';
@@ -91,7 +90,6 @@ world.add(createTracker({ dashboard }));
 world.add(createGlobe({ dashboard, station: MASPALOMAS }));
 world.add(createTables({ dashboard, orbitSource, station: MASPALOMAS }));
 createLegend({ dashboard });
-world.add(createSheet({ dashboard }));
 world.start();
 
 export { scene, edrs, weather, weatherFx, dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };

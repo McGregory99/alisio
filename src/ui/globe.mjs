@@ -25,7 +25,7 @@ export function createGlobe({ dashboard, station }) {
   const g = canvas.getContext('2d');
   g.scale(dpr, dpr);
   const caption = h('p', { class: 'globe-cap', text: `${station.name} · -20/+70 min`, title: `Ground tracks: 20 min back, 70 min ahead. Centred on ${station.name}; 30 degree graticule, no coastlines. Ring: approximate visibility footprint of the ${station.maskDeg} degree mask at ${REFERENCE_ALT_KM} km.` });
-  dashboard.mount('globe', 'Constellation', h('div', { style: 'display:flex;flex-direction:column;min-height:0;flex:1 1 auto;align-items:center' }, canvas, caption), { order: 40 });
+  dashboard.mount('globe', 'Constellation', h('div', { style: 'display:flex;flex-direction:column;min-height:0;flex:1 1 auto;align-items:center' }, canvas, caption), { order: 60 });
   document.getElementById('panel-globe')?.classList.add('globe-panel');
 
   const centre = { latDeg: station.location.latDeg, lonDeg: station.location.lonDeg };

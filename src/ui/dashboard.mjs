@@ -1,16 +1,19 @@
-// Dashboard shell (R7.1, R7.2, R7.6): top bar (brand, search, areas, clock, weather, theme), KPI cards with sparklines,
-// a side column and a collapsible bottom dock. `mount()` places the other panels: tracker, globe and tables in the dock,
-// everything else in the side column. At 768 px and below the same content becomes the bottom sheet (see sheet.mjs).
+// Dashboard shell (R7.1, R7.2, R7.6) with progressive disclosure. The default scene shows only a slim top bar, three KPI
+// chips, one floating pass card and the time control; everything else lives in drawers opened from a tab bar or the menu
+// (drawers.mjs), and the detail panel appears while something is selected. `mount()` routes each panel to its home
+// (drawer-model.mjs). Keys: P K W I toggle the drawers, H hides the whole interface, Escape closes the top layer.
 import { PRODUCT_NAME } from './branding.mjs';
 import { h, svg, setText } from './dom.mjs';
 import { icon, logoMark } from './icons.mjs';
-import { sourceModel, refreshOutcomeText, kpiCards } from './dashboard-model.mjs';
+import { sourceModel, refreshOutcomeText, kpiCards, kpiChips } from './dashboard-model.mjs';
+import { createDrawers } from './drawers.mjs';
+import { createPassCard } from './pass-card.mjs';
+import { DRAWERS, panelHome, keyAction, escapeTarget } from './drawer-model.mjs';
 import { sparkPath } from './spark-model.mjs';
 import { approach } from './tween-model.mjs';
 import { nextThemeMode, resolveTheme } from './theme-model.mjs';
 
 const REFRESH_MS = 250; // the KPI cards and the source panel refresh four times a second, not every frame
-const DOCK_PANELS = new Set(['tracker', 'globe', 'tables']);
 const MOBILE = '(max-width: 768px)';
 const THEME_KEY = 'alisio-theme';
 const SPARK_W = 100, SPARK_H = 26;
@@ -76,29 +79,30 @@ function createKpiCard(id, label) {
 export function createDashboard({ orbitSource }) {
   const root = h('aside', { id: 'dashboard', 'aria-label': 'Operations dashboard' });
   const doc = document.documentElement;
+  const mq = window.matchMedia?.(MOBILE);
 
-  // Top bar. Search, area tabs, clock chip and (on desktop) the time control are created by their own modules and adopted here.
-  const chipHost = h('span', { style: 'display:contents' });
-  const slotEnd = h('div', { class: 'slot-end' }, chipHost);
+  // Top bar: brand, search (adopted), clock chip (adopted), theme and menu buttons.
   const themeBtn = h('button', { type: 'button', class: 'theme-btn' });
   const themeIcon = h('span', { style: 'display:contents' });
-  const themeLabel = h('span');
-  themeBtn.append(themeIcon, themeLabel);
-  const topbar = h('header', { id: 'topbar', class: 'glass', 'aria-label': 'Top bar' },
+  themeBtn.append(themeIcon);
+  const menuBtn = h('button', { type: 'button', class: 'menu-btn', 'aria-expanded': 'false', 'aria-controls': 'menu', 'aria-label': 'Menu', title: 'Menu (?)' }, icon('menu'));
+  const slotEnd = h('div', { class: 'slot-end' });
+  const menu = h('div', { id: 'menu', class: 'menu', hidden: true, role: 'group', 'aria-label': 'Menu', tabindex: '-1' });
+  const topbar = h('header', { id: 'topbar', class: 'glass', 'data-hud': '', 'aria-label': 'Top bar' },
     h('div', { class: 'brand' }, logoMark(), h('h1', { 'aria-label': PRODUCT_NAME }, 'Alisio', h('small', { text: 'Maspalomas Ground Station Watch' }))),
-    h('div', { class: 'spacer' }), slotEnd);
+    h('div', { class: 'spacer' }), slotEnd, menu);
   const spacer = topbar.children[1];
-  for (const id of ['search-hud', 'area-switcher']) { const el = document.getElementById(id); if (el) topbar.insertBefore(el, spacer); }
+  const searchEl = document.getElementById('search-hud');
+  if (searchEl) topbar.insertBefore(searchEl, spacer);
   const clockEl = document.getElementById('clock-chip');
   if (clockEl) slotEnd.append(clockEl);
-  slotEnd.append(themeBtn);
+  slotEnd.append(themeBtn, menuBtn);
 
   // Theme: follows the simulated sun until the user picks one (auto -> light -> dark).
   let mode = readMode(), theme = doc.dataset.theme === 'light' ? 'light' : 'dark';
   function paintTheme() {
     doc.dataset.theme = theme;
     themeIcon.replaceChildren(icon(mode === 'auto' ? 'auto' : mode === 'light' ? 'sun' : 'moon'));
-    setText(themeLabel, mode === 'auto' ? `Auto ${theme === 'dark' ? 'night' : 'day'}` : mode);
     const msg = `Theme: ${mode === 'auto' ? `auto, follows the simulated sun (${theme})` : mode}. Activate to switch to ${nextThemeMode(mode)}.`;
     themeBtn.setAttribute('aria-label', msg); themeBtn.title = msg;
   }
@@ -106,30 +110,105 @@ export function createDashboard({ orbitSource }) {
   let sunEl = null;
   paintTheme();
 
-  // KPI cards.
-  const kpiRow = h('section', { id: 'kpis', 'aria-label': 'Key indicators' });
+  // Drawers and the left column (KPI chips, pass card, detail panel).
+  const drawers = createDrawers({ onChange: () => syncMenu() });
+  const chipEls = new Map(), chipVals = new Map();
+  const chipRow = h('section', { id: 'kpi-chips', 'aria-label': 'Key indicators' });
+  for (const id of ['countdown', 'active', 'today']) {
+    const v = h('b', { class: 'num' }), l = h('span', { class: 'eyebrow' });
+    const b = h('button', { type: 'button', class: 'kchip glass', 'data-hud': '', 'data-kpi': id, title: 'Open the key indicators (K)' }, l, v);
+    b.addEventListener('click', () => drawers.toggle('kpis'));
+    chipEls.set(id, l); chipVals.set(id, v); chipRow.append(b);
+  }
+  const detailBody = h('div', { class: 'detail-wrap' });
+  const detailClose = h('button', { type: 'button', class: 'x', 'aria-label': 'Close the detail panel', title: 'Close (Esc)' }, icon('close'));
+  const detailPanel = h('section', { id: 'detail-panel', class: 'glass', 'data-hud': '', hidden: true, 'aria-label': 'Selection details' },
+    h('header', { class: 'drawer-head' }, h('h2', { text: 'Detail' }), detailClose), detailBody);
+  const left = h('div', { id: 'hud-left' });
+  let selected = null;
+  const listeners = new Set();
+  function select(entity) {
+    selected = entity ?? null;
+    if (selected) doc.dataset.selected = selected.id; else delete doc.dataset.selected;
+    detailPanel.hidden = !selected;
+    if (selected && mq?.matches) drawers.close({ restore: false });
+    for (const fn of listeners) fn(selected);
+  }
+  detailClose.addEventListener('click', () => select(null));
+  document.addEventListener('alisio:deselect', () => { if (selected) select(null); });
+  const passCard = createPassCard({ onSelect: select });
+  left.append(chipRow, passCard.el, detailPanel);
+
+  // KPI cards (full set) live in the KPI drawer.
+  const kpiGrid = h('section', { id: 'kpis', 'aria-label': 'Key indicators' });
   const cards = new Map();
   for (const [id, label] of [['today', 'Passes today (UTC)'], ['countdown', 'Next AOS in'], ['active', 'Active passes'], ['volume', 'Data, last 24 h'], ['timeliness', 'Timeliness (NRT)']]) {
-    const c = createKpiCard(id, label); cards.set(id, c); kpiRow.append(c.el);
+    const c = createKpiCard(id, label); cards.set(id, c); kpiGrid.append(c.el);
   }
 
-  // Side column and dock.
-  const side = h('div', { id: 'side', 'aria-label': 'Details' });
-  const dockTools = h('div', { class: 'dock-tools' });
-  const collapse = h('button', { type: 'button', class: 'collapse', 'aria-expanded': 'true', 'aria-controls': 'dock-body', 'aria-label': 'Collapse the dock', title: 'Collapse the dock' }, icon('chevron'));
-  dockTools.append(collapse);
-  const dockBody = h('div', { class: 'dock-body', id: 'dock-body' });
-  const dock = h('section', { id: 'dock', class: 'glass', 'aria-label': 'Passes, constellation and tables' },
-    h('div', { class: 'dock-head' }, h('h2', { text: 'Live operations' }), dockTools), dockBody);
-  collapse.addEventListener('click', () => {
-    const closed = dock.toggleAttribute('data-collapsed');
-    collapse.setAttribute('aria-expanded', String(!closed));
-    const t = closed ? 'Expand the dock' : 'Collapse the dock';
-    collapse.setAttribute('aria-label', t); collapse.title = t;
-  });
-  root.append(kpiRow, dock, side);
+  root.append(left, ...drawers.elements(), drawers.tabbar);
+  document.body.append(topbar, root);
 
-  // Source panel (provenance of the orbit data) lives at the end of the side column.
+  // Menu: area presets (adopted), panels, cinematic mode and the shortcut list.
+  const menuPanels = h('div', { class: 'menu-list' }, ...DRAWERS.map((d) => {
+    const b = h('button', { type: 'button', 'data-drawer': d.id, 'aria-keyshortcuts': d.key.toUpperCase() }, h('span', { text: d.title }), h('kbd', { 'aria-hidden': 'true', text: d.key.toUpperCase() }));
+    b.addEventListener('click', () => { setMenu(false); drawers.toggle(d.id); });
+    return b;
+  }));
+  const cineBtn = h('button', { type: 'button', 'aria-keyshortcuts': 'H' }, h('span', { text: 'Hide the interface' }), h('kbd', { 'aria-hidden': 'true', text: 'H' }));
+  cineBtn.addEventListener('click', () => { setMenu(false); setCinematic(true); });
+  const areas = document.getElementById('area-switcher');
+  menu.append(
+    h('p', { class: 'eyebrow', text: 'View' }), ...(areas ? [areas] : []),
+    h('p', { class: 'eyebrow', text: 'Panels' }), menuPanels, cineBtn,
+    h('p', { class: 'eyebrow', text: 'Shortcuts' }),
+    h('p', { class: 'keys', text: '/ search | P passes | K KPIs | W weather | I about | H hide the interface | Esc close | ? this menu' }));
+  let menuOpen = false;
+  function setMenu(open, { focus = true } = {}) {
+    if (open === menuOpen) return;
+    menuOpen = open; menu.hidden = !open; menuBtn.setAttribute('aria-expanded', String(open));
+    if (open) menu.focus({ preventScroll: true }); else if (focus && menu.contains(document.activeElement)) menuBtn.focus({ preventScroll: true });
+  }
+  function syncMenu() { for (const b of menuPanels.children) b.setAttribute('aria-pressed', String(b.dataset.drawer === drawers.current())); }
+  menuBtn.addEventListener('click', () => setMenu(!menuOpen));
+  document.addEventListener('pointerdown', (e) => { if (menuOpen && !menu.contains(e.target) && !menuBtn.contains(e.target)) setMenu(false, { focus: false }); });
+
+  // Cinematic mode: only the disclaimer and a small hint stay.
+  const hint = h('button', { type: 'button', id: 'cine-hint', 'aria-label': 'Show the interface (H)' }, h('kbd', { text: 'H' }), h('span', { text: 'show the interface' }));
+  hint.addEventListener('click', () => setCinematic(false));
+  document.body.append(hint);
+  const cinematic = () => doc.hasAttribute('data-cinematic');
+  function setCinematic(on) {
+    if (on === cinematic()) return;
+    if (on) { setMenu(false, { focus: false }); document.activeElement?.blur?.(); doc.setAttribute('data-cinematic', ''); } else { doc.removeAttribute('data-cinematic'); }
+  }
+
+  addEventListener('keydown', (e) => {
+    const t = e.target;
+    const typing = t instanceof HTMLElement && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName));
+    if (e.key === 'Escape') {
+      const target = escapeTarget({ cinematic: cinematic(), menu: menuOpen, drawer: drawers.current(), selected: !!selected });
+      if (target === 'cinematic') setCinematic(false);
+      else if (target === 'menu') setMenu(false);
+      else if (target === 'drawer') drawers.close();
+      else if (target === 'selection') select(null);
+      if (target) e.preventDefault();
+      return;
+    }
+    const a = keyAction({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, altKey: e.altKey, typing });
+    if (!a) return;
+    e.preventDefault();
+    if (a.type === 'toggle') { setMenu(false, { focus: false }); drawers.toggle(a.id); } else if (a.type === 'cinematic') setCinematic(!cinematic()); else setMenu(!menuOpen);
+  });
+
+  // The disclaimer height feeds the layout (the bottom row sits above it).
+  const disclaimer = document.getElementById('disclaimer');
+  const syncDisclaimer = () => doc.style.setProperty('--disclaimer-h', `${disclaimer?.offsetHeight ?? 28}px`);
+  syncDisclaimer();
+  if (typeof ResizeObserver !== 'undefined' && disclaimer) new ResizeObserver(syncDisclaimer).observe(disclaimer);
+  addEventListener('resize', syncDisclaimer);
+
+  // Source panel (provenance of the orbit data) lives in the About drawer.
   const stateChip = h('span', { class: 'chip' });
   const epochText = h('span', { class: 'num' });
   const ageText = h('span', { class: 'num' });
@@ -137,28 +216,13 @@ export function createDashboard({ orbitSource }) {
   const refreshBtn = h('button', { type: 'button', class: 's-btn', text: 'Refresh orbit data' });
   const refreshNote = h('p', { class: 's-note', 'aria-live': 'polite' });
   const outcomeNote = h('p', { class: 's-note', 'aria-live': 'polite' });
-  const sourcePanel = h('section', { class: 'panel glass source', id: 'panel-source', 'aria-label': 'Orbit source' },
-    h('h2', { text: 'Orbit source' }),
+  const sourceBody = h('div', { class: 'source' },
     h('div', { class: 's-row' }, h('span', { text: 'State' }), stateChip),
     h('div', { class: 's-row' }, h('span', { text: 'Epoch' }), epochText),
     h('div', { class: 's-row' }, h('span', { text: 'Age' }), ageText),
     warning, refreshBtn, refreshNote, outcomeNote);
-  sourcePanel.style.order = '70';
-  side.append(sourcePanel);
-  document.body.append(topbar, root);
 
-  // The time control is adopted into the dock on desktop and floats above the sheet on mobile.
-  const timeEl = document.getElementById('time-control');
-  const mq = window.matchMedia?.(MOBILE);
-  const placeTime = () => { if (!timeEl) return; if (mq?.matches) document.body.append(timeEl); else dockTools.insertBefore(timeEl, collapse); };
-  placeTime();
-  mq?.addEventListener?.('change', placeTime);
-  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => doc.style.setProperty('--dock-h', mq?.matches ? '0px' : `${dock.offsetHeight}px`)).observe(dock);
-
-  let selected = null;
-  const listeners = new Set();
   let acc = REFRESH_MS, dirty = true;
-
   refreshBtn.addEventListener('click', async () => {
     refreshBtn.disabled = true;
     setText(outcomeNote, 'Requesting live orbit data...');
@@ -167,23 +231,29 @@ export function createDashboard({ orbitSource }) {
     dirty = true; // the schedule re-keys on the new epochs by itself (R3.7); the header just re-reads the source
   });
 
+  /** Add a panel. It lands in its home drawer (or the detail panel); `order` sorts within it. */
+  function mount(id, title, element, { order = 50 } = {}) {
+    const home = panelHome(id);
+    const inDetail = home === 'detail';
+    const section = h('section', { class: inDetail ? 'detail-section' : `panel ${id}-section`, id: `panel-${id}`, 'aria-label': title || id },
+      title && !inDetail ? h('h2', { text: title }) : '', element);
+    section.style.order = String(order);
+    (inDetail ? detailBody : drawers.bodyOf(home) ?? drawers.bodyOf('about')).append(section);
+    return section;
+  }
+  mount('kpis', '', kpiGrid, { order: 10 });
+  mount('source', 'Orbit source', sourceBody, { order: 70 });
+
   return {
     root,
-    /** Add a panel. tracker, globe and tables go to the dock; the rest to the side column. `order` sorts within each. */
-    mount(id, title, element, { order = 50 } = {}) {
-      const inDock = DOCK_PANELS.has(id);
-      const section = h('section', { class: inDock ? `dock-panel ${id}-panel` : 'panel glass', id: `panel-${id}`, 'aria-label': title || id },
-        title ? h('h2', { text: title }) : '', element);
-      section.style.order = String(order);
-      (inDock ? dockBody : side).append(section);
-      return section;
-    },
-    /** Put a small element (a chip) in the top bar, before the clock. */
-    addChip(element) { chipHost.append(element); return element; },
-    select(entity) { selected = entity; for (const fn of listeners) fn(selected); },
+    mount,
+    /** Put a small element (a chip) in the header of the Weather drawer. */
+    addChip(element) { drawers.slotOf('env').append(element); return element; },
+    select,
     selected: () => selected,
     onSelect(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     theme: () => theme,
+    drawers,
     update({ simMs, dt, schedule, sun }) {
       for (const c of cards.values()) c.tween(Math.max(0, dt));
       if (sun && typeof sun.elDeg === 'number') {
@@ -195,8 +265,11 @@ export function createDashboard({ orbitSource }) {
       if (acc < REFRESH_MS && !dirty) return;
       acc = 0; dirty = false;
       const served = schedule.assignments.filter((a) => a.status === 'assigned').map((a) => a.pass).concat(schedule.finished.map((f) => f.pass));
-      for (const c of kpiCards(served, simMs)) cards.get(c.id).render(c);
-    
+      const list = kpiCards(served, simMs);
+      for (const c of list) cards.get(c.id).render(c);
+      for (const c of kpiChips(list)) { setText(chipEls.get(c.id), c.label); setText(chipVals.get(c.id), c.value); }
+      passCard.update(schedule, simMs);
+
       const m = sourceModel(orbitSource.current(), orbitSource.status(), new Date(simMs), new Date());
       setText(stateChip, `${m.label} (${m.state})`);
       stateChip.dataset.tone = m.state === 'stale' ? 'bad' : m.state === 'aging' ? 'warn' : 'ok';

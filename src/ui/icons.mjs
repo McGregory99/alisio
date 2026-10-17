@@ -12,6 +12,11 @@ const SHAPES = {
   cloud: () => [svg('path', { d: 'M7 18a4 4 0 0 1-.6-7.96A6 6 0 0 1 18 9.5a4.2 4.2 0 0 1-.5 8.5z' })],
   wind: () => [svg('path', { d: 'M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h7' })],
   rain: () => [svg('path', { d: 'M7 14a4 4 0 0 1-.6-7.96A6 6 0 0 1 18 5.5a4.2 4.2 0 0 1-.5 8.5zM8 18l-1 3M12 18l-1 3M16 18l-1 3' })],
+  passes: () => [svg('path', { d: 'M4 6h16M4 12h16M4 18h10' })],
+  kpis: () => [svg('path', { d: 'M5 20V11M12 20V5M19 20v-6' })],
+  about: () => [svg('circle', { cx: 12, cy: 12, r: 9 }), svg('path', { d: 'M12 11v5M12 8v.01' })],
+  menu: () => [svg('path', { d: 'M4 7h16M4 12h16M4 17h16' })],
+  close: () => [svg('path', { d: 'M6 6l12 12M18 6L6 18' })],
   haze: () => [svg('path', { d: 'M4 9h16M2 13h20M5 17h14' })],
 };
 

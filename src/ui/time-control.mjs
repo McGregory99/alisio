@@ -1,11 +1,11 @@
 // Time control (R6.5, R6.6): Live, 10x/60x/600x, Pause and Next pass, plus the UTC clock chip for the top bar.
 // Native buttons: focusable, Enter/Space activate, visible focus ring from styles.css.
-// The dashboard adopts both elements (#time-control into the dock, #clock-chip into the top bar).
+// #time-control floats as a centred pill at the bottom; the dashboard adopts #clock-chip into the top bar.
 import { timeButtons, nextPassTarget, clockChip } from './time-control-model.mjs';
 import { h, setText } from './dom.mjs';
 
 export function createTimeControl({ clock }) {
-  const root = h('div', { id: 'time-control', class: 'timebar', role: 'group', 'aria-label': 'Time control' });
+  const root = h('div', { id: 'time-control', class: 'timebar', role: 'group', 'aria-label': 'Time control', 'data-hud': '' });
 
   const time = h('span', { class: 't' });
   const mode = h('span');
