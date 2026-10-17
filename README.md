@@ -6,6 +6,30 @@ An unofficial, illustrative 3D world of the Maspalomas ground station on Gran Ca
 
 > Unofficial and illustrative. Not affiliated with ESA, the European Commission or INTA.
 
+![Overview: clean default view with the active pass card](docs/img/overview.jpg)
+
+![Passes drawer open](docs/img/passes-drawer.jpg)
+
+## Interface
+
+The scene fills the screen. A thin top bar, three chips (next AOS, active, today), an active-pass card and a time pill are always visible; everything else lives in drawers.
+
+| Key | Action |
+|---|---|
+| `P` | Passes and tables |
+| `K` | KPIs |
+| `W` | Weather and EDRS relays |
+| `I` | About the data |
+| `H` | Hide the interface (the disclaimer stays) |
+| `Esc` | Close the drawer, then the selection |
+| `/` | Search |
+
+Details of a satellite or antenna appear when you select it. Scene labels show only the selection and the active pass.
+
+## Satellite models
+
+Each Sentinel family has its own procedural model at real scale (S-1 with its long radar antenna, S-2, S-3, S-5P, S-6). Open `?models=1` to see them side by side. Dimensions and sources are in [docs/sentinel-models.md](docs/sentinel-models.md); the S-5P and S-6 sizes are estimates.
+
 Elements are tagged `verified` (confirmed from public sources) or `illustrative` (artistic placeholder or assumption). The product uses no ESA, Copernicus or INTA logos.
 
 ## Run
