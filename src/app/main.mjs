@@ -35,6 +35,12 @@ import { createWeatherSelect } from '../ui/weather-select.mjs';
 import { createEdrs } from '../scene/edrs.mjs';
 import { createEdrsToggle } from '../ui/edrs-toggle.mjs';
 
+// Hidden debug route: ?models=1 shows the Sentinel model inspector instead of the world.
+if (new URLSearchParams(location.search).has('models')) {
+  (await import('../scene/model-inspector.mjs')).runInspector();
+  await new Promise(() => {});
+}
+
 const clock = createSimClock();
 // No network on load: the live refresh only runs when the user asks (gated, see orbit-source).
 const orbitSource = createOrbitSource({
