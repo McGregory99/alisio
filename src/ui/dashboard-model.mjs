@@ -1,5 +1,8 @@
 // Pure view models for the dashboard header and KPI panel (R3.2, R7.2, R7.6). No DOM.
 import { epochState, epochAgeDays } from '../core/orbit-source.mjs';
+import { kpis } from '../core/kpi.mjs';
+import { missionByNorad } from '../data/missions.mjs';
+import { bucketCounts, rangeSeries } from './spark-model.mjs';
 
 export function formatCountdown(ms) {
   if (ms == null) return '--';
@@ -64,6 +67,54 @@ export function kpiRows(k) {
       id: 'timeliness', label: 'Timeliness (NRT)',
       value: t.finished === 0 ? 'none finished' : `${t.onTime} on time, ${t.atRisk} at risk, ${t.late} late`,
       sub: t.finished === 0 ? '' : `of ${t.finished} finished (illustrative targets except S1)`,
+    },
+  ];
+}
+
+const HOUR_MS = 3_600_000, DAY_MS = 86_400_000;
+const passGb = (p) => { const m = missionByNorad(p.norad); return m ? (m.downlink.rateMbps * ((p.los - p.aos) / 1000)) / 8 / 1000 : 0; };
+
+/**
+ * KPI cards with numeric values, a sparkline series and an honest delta, derived only from the served passes.
+ * today: passes per 2 h of the UTC day; active: concurrent passes over -12 h..+12 h; volume: GB per hour (by LOS) over 24 h.
+ */
+export function kpiCards(passes, nowMs) {
+  const k = kpis(passes, nowMs);
+  const dayStart = Math.floor(nowMs / DAY_MS) * DAY_MS;
+  const t = k.timeliness;
+
+  const volumeSpark = new Array(24).fill(0);
+  let lastHourGb = 0;
+  for (const p of passes) {
+    if (p.los > nowMs || p.los <= nowMs - DAY_MS) continue;
+    const gb = passGb(p);
+    volumeSpark[Math.min(23, Math.floor((p.los - (nowMs - DAY_MS)) / HOUR_MS))] += gb;
+    if (p.los > nowMs - HOUR_MS) lastHourGb += gb;
+  }
+  const volumeDelta = t.finished === 0
+    ? { text: 'no finished passes in 24 h', tone: 'flat' }
+    : { text: `+${Math.round(lastHourGb)} GB last hour`, tone: lastHourGb > 0 ? 'up' : 'flat' };
+
+  return [
+    {
+      id: 'today', label: 'Passes today (UTC)', num: k.passesToday, unit: '', sub: 'served passes, per 2 h',
+      spark: bucketCounts(passes.map((p) => p.aos), dayStart, dayStart + DAY_MS, 12),
+    },
+    {
+      id: 'countdown', label: 'Next AOS in', text: formatCountdown(k.countdownMs), sub: k.nextAosMs == null ? 'no pass in the schedule' : utcClock(k.nextAosMs),
+      countdownMs: k.countdownMs,
+    },
+    {
+      id: 'active', label: 'Active passes', num: k.activeCount, unit: '', sub: 'between AOS and LOS, -12 h to +12 h',
+      spark: rangeSeries((tm) => kpis(passes, tm).activeCount, nowMs - 12 * HOUR_MS, nowMs + 12 * HOUR_MS, 24),
+    },
+    {
+      id: 'volume', label: 'Data, last 24 h', num: Math.round(k.volumeGb), unit: 'GB', sub: 'illustrative rates',
+      spark: volumeSpark, delta: volumeDelta,
+    },
+    {
+      id: 'timeliness', label: 'Timeliness (NRT)', finished: t.finished, onTime: t.onTime, atRisk: t.atRisk, late: t.late,
+      sub: t.finished === 0 ? 'none finished yet' : `of ${t.finished} finished (illustrative targets except S1)`,
     },
   ];
 }
