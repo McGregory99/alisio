@@ -47,8 +47,8 @@ export function createLinks({ THREE, parent, station }) {
         const seg = beamSegment(pv, sat, pv.feedM ?? 0);
         dirV.set(seg.dir.x, seg.dir.y, seg.dir.z);
         const style = bandStyle(band);
-        const flicker = 0.62 + 0.1 * Math.sin(t * 9 + id.length);
-        for (const [m, op, col] of [[l.beam, flicker, style.hex], [l.glow, 0.13, style.glow]]) {
+        const flicker = 0.34 + 0.06 * Math.sin(t * 9 + id.length);
+        for (const [m, op, col] of [[l.beam, flicker, style.hex], [l.glow, 0.11, style.glow]]) {
           m.visible = true;
           m.position.set(seg.mid.x, seg.mid.y, seg.mid.z);
           m.quaternion.setFromUnitVectors(up, dirV);

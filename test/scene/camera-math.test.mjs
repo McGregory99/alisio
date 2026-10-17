@@ -48,3 +48,17 @@ test('follow delta is the movement of the tracked point since the last frame', (
   assert.deepEqual(followDelta({ x: 1, y: 2, z: 3 }, { x: 4, y: 2, z: 0 }), { x: 3, y: 0, z: -3 });
   assert.deepEqual(followDelta(null, { x: 4, y: 2, z: 0 }), { x: 0, y: 0, z: 0 });
 });
+
+import { flyDuration, easeInOut } from '../../src/scene/camera-math.mjs';
+
+test('flyDuration: short hops are quick, long flights take longer, always within 0.9..2.6 s', () => {
+  assert.ok(flyDuration(20) < flyDuration(1500));
+  assert.ok(flyDuration(0) >= 0.9 && flyDuration(1e6) <= 2.6);
+});
+
+test('easeInOut: 0 at 0, 1 at 1, symmetric midpoint, monotonic', () => {
+  assert.equal(easeInOut(0), 0);
+  assert.equal(easeInOut(1), 1);
+  assert.ok(Math.abs(easeInOut(0.5) - 0.5) < 1e-9);
+  assert.ok(easeInOut(0.3) < easeInOut(0.4));
+});

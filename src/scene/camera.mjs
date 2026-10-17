@@ -1,6 +1,6 @@
 // Orbit / pan / zoom (mouse and touch) with bounds: never below terrain, never beyond the maximum distance.
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { constrainCamera, framingPosition, smoothstep, lerp3, followDelta } from './camera-math.mjs';
+import { constrainCamera, framingPosition, easeInOut, flyDuration, lerp3, followDelta } from './camera-math.mjs';
 import { terrainHeight } from './terrain-math.mjs';
 
 export const CAMERA_LIMITS = Object.freeze({ clearance: 6, minDistance: 25, maxDistance: 1400 });
@@ -27,12 +27,12 @@ export function createCamera({ THREE, camera, canvas }) {
   return {
     controls,
     /** Animate the camera to frame the subject at `dist`; with `follow` it keeps tracking until `stopFollow`. */
-    flyTo(getPos, { dist = 120, follow = false, label = null, durationS = 1.4, dirFrom = null } = {}) {
+    flyTo(getPos, { dist = 120, follow = false, label = null, durationS = null, dirFrom = null } = {}) {
       const toT0 = getPos();
       // dirFrom: an offset direction to view from (presets); otherwise keep the current viewing direction.
       const from = dirFrom ? { x: toT0.x + dirFrom.x, y: toT0.y + dirFrom.y, z: toT0.z + dirFrom.z } : camera.position;
       const dir = framingPosition(toT0, from, dist);
-      fly = { t: 0, dur: durationS, fromT: controls.target.clone(), fromP: camera.position.clone(), getPos, dist, dir };
+      fly = { t: 0, dur: durationS ?? flyDuration(Math.hypot(toT0.x - camera.position.x, toT0.y - camera.position.y, toT0.z - camera.position.z)), fromT: controls.target.clone(), fromP: camera.position.clone(), getPos, dist, dir };
       tracked = follow ? { getPos, label, last: null } : null;
     },
     stopFollow() { tracked = null; },
@@ -41,7 +41,7 @@ export function createCamera({ THREE, camera, canvas }) {
     update(frame) {
       if (fly) {
         fly.t += frame?.dt ?? 0.016;
-        const k = smoothstep(fly.t / fly.dur);
+        const k = easeInOut(fly.t / fly.dur);
         const toT = fly.getPos();
         const toP = framingPosition(toT, fly.dir, fly.dist); // direction fixed at launch, target live
         const t = lerp3(fly.fromT, toT, k), p = lerp3(fly.fromP, toP, k);

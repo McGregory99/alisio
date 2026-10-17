@@ -13,7 +13,7 @@ export function beamSegment(a, b, startOffset = 0) {
   return { start, length, dir, mid: { x: start.x + dir.x * length / 2, y: start.y + dir.y * length / 2, z: start.z + dir.z * length / 2 } };
 }
 
-const BANDS = { X: { hex: '#4fd8ff', glow: '#2a9fff' }, S: { hex: '#ffb454', glow: '#ff8a2a' } };
+const BANDS = { X: { hex: '#3fc4ff', glow: '#1f8cff' }, S: { hex: '#ffb454', glow: '#ff8a2a' } };
 export const bandStyle = (band) => BANDS[band] ?? BANDS.X;
 
 /** What to draw for an antenna in a pass phase: the payload beam, and the S-band TT&C uplink pulses. */

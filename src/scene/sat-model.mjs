@@ -3,7 +3,7 @@
 import { satVariant } from './link-math.mjs';
 import { solarTexture, glowTexture } from './fx-textures.mjs';
 
-export function makeSatModel(THREE, family, { scale = 4 } = {}) {
+export function makeSatModel(THREE, family, { scale = 5.5 } = {}) {
   const v = satVariant(family);
   const g = new THREE.Group();
   const std = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, metalness: 0.2, flatShading: true, ...o });
