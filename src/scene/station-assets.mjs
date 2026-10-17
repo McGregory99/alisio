@@ -1,22 +1,24 @@
 // Campus assets built only from station entities (data-driven). Parametrised dish with az/el groups
 // (Downlink technique), radome, power plant, operations building, emissive windows and night lights.
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+// Roads, fence, cable trenches and service traffic come from roads.mjs / traffic.mjs; every decorative element is an
+// illustrative placeholder, grouped under objects that carry `userData.provenance = 'illustrative'`.
 import { entitiesFromStation } from '../core/station-entities.mjs';
 import { dimsForAntenna } from './station-assets-math.mjs';
 import { terrainHeight } from './terrain-math.mjs';
 import { envFromSun } from './env-math.mjs';
 import { registerAnchor } from './callouts-registry.mjs';
+import { createBuildingKit } from './buildings.mjs';
+import { createRoads } from './roads.mjs';
+import { createTraffic } from './traffic.mjs';
 import { dishContent } from './callouts-math.mjs';
 
 export function createStationAssets({ THREE, scene, station }) {
+  const kit = createBuildingKit({ THREE });
   const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, flatShading: true, ...o });
-  const white = mat('#E7E4DE'), grey = mat('#DAD6CF'), steel = mat('#8b929b', { metalness: 0.4, roughness: 0.4 });
-  const accent = mat('#2f6fbf'), dishMat = mat('#F2F0EB', { roughness: 0.5, side: THREE.DoubleSide });
-  const windowMat = mat('#1c2a3a', { emissive: '#ffcf8a', emissiveIntensity: 0 });
-  const lampMat = mat('#333', { emissive: '#ffe2a8', emissiveIntensity: 0 });
-  const mesh = (g, m) => { const o = new THREE.Mesh(g, m); o.castShadow = o.receiveShadow = true; return o; };
-  const box = (w, h, d, m, r = 0.25) => mesh(new RoundedBoxGeometry(w, h, d, 3, r), m);
-  const cyl = (rt, rb, h, m, seg = 16) => mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m);
+  const { white, grey, steel, accent } = kit.mat;
+  const dishMat = mat('#F2F0EB', { roughness: 0.5, side: THREE.DoubleSide });
+  const windowMat = new THREE.MeshStandardMaterial({ color: '#1c2a3a', roughness: 0.25, metalness: 0.3, emissive: '#ffcf8a', emissiveIntensity: 0 });
+  const { mesh, box, cyl } = kit;
   const lights = [];
   const dishes = new Map();
   const pickables = [];
@@ -26,6 +28,7 @@ export function createStationAssets({ THREE, scene, station }) {
     const root = new THREE.Group();
     const ped = cyl(1.3 * s, 1.9 * s, d.pedestalH, white, 14); ped.position.y = 0.6 + d.pedestalH / 2; root.add(ped);
     const band = cyl(1.38 * s, 1.44 * s, 0.45 * s, accent, 14); band.position.y = 0.6 + d.pedestalH * 0.82; root.add(band);
+    const door = kit.plain(0.9 * s, 1.7 * s, 0.25, kit.mat.dark); door.position.set(0, 0.6 + 0.85 * s, 1.82 * s); root.add(door);
     const azG = new THREE.Group(); azG.position.y = 0.6 + d.pedestalH; root.add(azG);
     const head = box(3.6 * s, 1.4 * s, 2.8 * s, grey, 0.3 * s); head.position.y = 0.7 * s; azG.add(head);
     for (const sd of [-1, 1]) { const arm = box(0.65 * s, d.armH, 1.5 * s, grey, 0.2 * s); arm.position.set(sd * 1.75 * s, d.armH / 2 + 0.6 * s, 0); azG.add(arm); }
@@ -35,6 +38,7 @@ export function createStationAssets({ THREE, scene, station }) {
     const bowl = mesh(bg, dishMat); bowl.position.z = 1.4 * s; elG.add(bowl);
     const rim = mesh(new THREE.TorusGeometry(R, 0.13 * s, 6, 44), grey); rim.position.z = 1.4 * s + R * R / (4 * f); elG.add(rim);
     const hub = cyl(1.3 * s, 1.6 * s, 1.4 * s, grey, 14); hub.rotation.x = Math.PI / 2; hub.position.z = 0.6 * s; elG.add(hub);
+    const hubBand = cyl(1.34 * s, 1.34 * s, 0.35 * s, accent, 14); hubBand.rotation.x = Math.PI / 2; hubBand.position.z = 0.2 * s; elG.add(hubBand);
     const focus = new THREE.Vector3(0, 0, 1.4 * s + f);
     for (let i = 0; i < 4; i++) { // feed struts
       const a = i * Math.PI / 2 + Math.PI / 4, rr = R * 0.86;
@@ -59,15 +63,6 @@ export function createStationAssets({ THREE, scene, station }) {
     scene.add(l); lights.push(l);
   }
 
-  function makeBuilding(e, w, h, dpt, bodyMat) {
-    const g = new THREE.Group();
-    const body = box(w, h, dpt, bodyMat, 0.5); body.position.y = h / 2 + 0.7; g.add(body);
-    const stripe = box(w + 0.2, 0.6, dpt + 0.2, accent, 0.2); stripe.position.y = h + 0.1; g.add(stripe);
-    const win = new THREE.Mesh(new THREE.BoxGeometry(w * 0.8, 1.6, 0.3), windowMat); win.position.set(0, h * 0.55, dpt / 2 + 0.05); g.add(win);
-    const win2 = win.clone(); win2.position.z = -dpt / 2 - 0.05; g.add(win2);
-    return g;
-  }
-
   const entities = entitiesFromStation(station);
   for (const e of entities) {
     const g = new THREE.Group();
@@ -80,7 +75,8 @@ export function createStationAssets({ THREE, scene, station }) {
     }
     if (e.kind === 'antenna') {
       const m = makeDish(e); g.add(m.root);
-      const pad = cyl(e.diameterM * 0.7, e.diameterM * 0.75, 0.6, mat('#CAC5BD'), 24); pad.position.y = 0.3; g.add(pad);
+      const pad = cyl(e.diameterM * 0.7, e.diameterM * 0.75, 0.6, kit.mat.pad, 24); pad.position.y = 0.3; g.add(pad);
+      kit.shelter(g, e.diameterM * 0.7 + 3, 3);
       place(g, e);
       dishes.set(e.id, { ...m, entity: e, group: g });
       const top = terrainHeight(e.position.x, e.position.z) + m.pivotH + e.diameterM / 2 + 3;
@@ -91,27 +87,21 @@ export function createStationAssets({ THREE, scene, station }) {
       });
       addLight(e.position.x + 6, terrainHeight(e.position.x, e.position.z) + 6, e.position.z + 6, '#ffe2a8', 14);
     } else if (e.kind === 'facility' && e.facilityKind === 'radome') {
-      const shell = mesh(new THREE.IcosahedronGeometry(7.4, 2), mat('#F6F5F1', { transparent: true, opacity: 0.92 })); shell.position.y = 6.3; g.add(shell);
-      const ring = cyl(6.7, 7.0, 1.8, mat('#D9D4CC'), 24); ring.position.y = 0.9; g.add(ring);
+      kit.radome(g);
       place(g, e);
     } else if (e.kind === 'facility' && e.facilityKind === 'power-plant') {
-      const hall = makeBuilding(e, 18, 6, 10, mat('#cfc8bb')); g.add(hall);
-      for (let i = 0; i < 3; i++) { const tank = cyl(1.4, 1.4, 4.5, steel, 14); tank.position.set(-6 + i * 6, 3, 8); g.add(tank); }
+      g.add(kit.power());
       place(g, e);
       addLight(e.position.x, terrainHeight(e.position.x, e.position.z) + 7, e.position.z + 8, '#ffe2a8', 16);
     } else if (e.kind === 'facility') {
-      g.add(makeBuilding(e, 26, 7, 14, mat('#ECE8E1')));
+      g.add(kit.ops());
       place(g, e);
       addLight(e.position.x, terrainHeight(e.position.x, e.position.z) + 9, e.position.z + 11, '#ffe2a8', 18);
     }
   }
-
-  // Lamp posts on a ring road: legible silhouette of the campus at night.
-  for (let i = 0; i < 8; i++) {
-    const a = i / 8 * Math.PI * 2, x = Math.cos(a) * 85, z = Math.sin(a) * 85;
-    const post = cyl(0.15, 0.2, 5, steel, 6); post.position.set(x, terrainHeight(x, z) + 2.5, z); scene.add(post);
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 6), lampMat); bulb.position.set(x, terrainHeight(x, z) + 5.2, z); scene.add(bulb);
-  }
+  kit.bakeWindows(scene, windowMat);
+  const roads = createRoads({ THREE, scene, entities });
+  const traffic = createTraffic({ THREE, scene, entities });
 
   /** Elevation pivot of an antenna in scene coordinates, or the station origin on the terrain when unknown. */
   function pivotOf(id) {
@@ -121,11 +111,13 @@ export function createStationAssets({ THREE, scene, station }) {
   }
 
   return {
-    entities, dishes, pickables, pivotOf,
-    update({ sun }) {
+    entities, dishes, pickables, pivotOf, roads, traffic,
+    update({ sun, dt = 0.016 }) {
       const k = envFromSun(sun.elDeg).stationLights;
       windowMat.emissiveIntensity = 1.6 * k;
-      lampMat.emissiveIntensity = 2.2 * k;
+      roads.setNight(k);
+      traffic.setNight(k);
+      traffic.update({ dt });
       for (const l of lights) l.intensity = l.userData.power * k;
     },
   };
