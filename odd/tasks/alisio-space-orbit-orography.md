@@ -10,7 +10,7 @@ Objective: three polish features. Branch: feat/space-orbit-orography. Delivery: 
 
 ## Tasks
 - T1 (S2) orbit around the selected object: inline. Status: done (verified in headless Chrome: left-drag rotates around the selected 15 m antenna, it stays centred; test interactionScheme)
-- T2 (S1) 3D space view with orbits: delegated writer (worktree), parallel with T3. Status: todo
+- T2 (S1) 3D space view with orbits: delegated writer (worktree), parallel with T3. Status: done (feat/space-view worktree; visual check in headless Chrome)
 - T3 (S3) orography + station plan fidelity: research (done by haiku) then delegated writer, disjoint files from T2. Status: todo
 
 ## Log
