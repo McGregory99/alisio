@@ -16,6 +16,7 @@ export function createWorld({ container, getFrame }) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(40, 1, 1, 6000);
   const systems = [];
+  let customRender = null; // (frame) => true when it drew the frame itself (e.g. the space view)
 
   function resize() {
     const w = container.clientWidth || innerWidth, h = container.clientHeight || innerHeight;
@@ -32,13 +33,14 @@ export function createWorld({ container, getFrame }) {
     last = t;
     const frame = getFrame(dt);
     for (const s of systems) s.update(frame);
-    renderer.render(scene, camera);
+    if (!customRender?.(frame)) renderer.render(scene, camera);
     requestAnimationFrame(loop);
   }
 
   return {
     ctx: { THREE, scene, camera, renderer, canvas },
     add(system) { systems.push(system); return system; },
+    setRender(fn) { customRender = fn; },
     start() { requestAnimationFrame(loop); },
   };
 }
