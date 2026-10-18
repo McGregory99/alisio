@@ -23,6 +23,7 @@ The scene fills the screen. A thin top bar, three chips (next AOS, active, today
 | `H` | Hide the interface (the disclaimer stays) |
 | `Esc` | Close the drawer, then the selection |
 | `/` | Search |
+| Scroll out past the limit | Earth from space with the satellites' orbits; `Esc` or zoom in to return ([details](docs/space-view.md)) |
 
 Details of a satellite or antenna appear when you select it. Scene labels show only the selection and the active pass.
 
@@ -64,7 +65,7 @@ The core (`src/core`) is DOM-free and covered by unit tests; scene and UI keep t
 
 ## Notes on accuracy
 
-- **Coast (amended R4.1)**: the coast is shown as "coast direction and relative distance indicated with a label; geometry compressed for legibility and marked illustrative". The sea lies south of the station, and the in-scene label reads "coast (compressed, illustrative)". The real shoreline is not scale-consistent with the campus.
+- **Coast (amended R4.1, superseded)**: the coast used to be compressed for legibility. It is now at the distance ESA reports: the sea lies about 1,750 m south of the station, the antenna platform stands 205 m up (ESA, 205.1 m above the WGS-84 ellipsoid) and the in-scene label reads "coast ~1.75 km (ESA)" (verified). Only those two numbers, the site (Montana Blanca) and the roughly 1.6 km distance to the Las Palmas-Mogan road are verified. The slope between them, the barrancos, the dune patch, the coastal town and the access road alignment are illustrative. See [docs/orography.md](docs/orography.md) for every fact and its source versus every illustrative choice. The campus layout inside the fence is also illustrative (no public site plan was found).
 - **Bands**: payload downlink is X-band. Sentinel TT&C prime is Kiruna; S-band capability at Maspalomas is shown but not claimed as prime.
 - **Reference point**: look angles are computed from the station geodetic origin; dish pointing uses each antenna pivot.
 - Sky positions are directions, not distances. Doppler uses an illustrative carrier frequency.

@@ -34,6 +34,7 @@ import { createWeatherFx } from '../scene/weather-fx.mjs';
 import { createWeatherSelect } from '../ui/weather-select.mjs';
 import { createEdrs } from '../scene/edrs.mjs';
 import { createEdrsToggle } from '../ui/edrs-toggle.mjs';
+import { createSpaceView } from '../scene/space-view.mjs';
 
 // Hidden debug route: ?models=1 shows the Sentinel model inspector instead of the world.
 if (new URLSearchParams(location.search).has('models')) {
@@ -92,6 +93,7 @@ const dashboard = world.add(createDashboard({
   orbitSource,
   onViewAntenna: (id) => { const t = targets.find((x) => x.entity.id === id); if (t) { labelsSys.show(t.entity); selection.flyToTarget(t); dashboard.select(t.entity); } },
 }));
+dashboard.onSelect((entity) => { if (!entity) camera.setLock(false); }); // closing the detail releases the orbit lock
 world.add(createDetail({ dashboard, orbitSource, station: MASPALOMAS, weather }));
 world.add(createWeatherSelect({ dashboard, weather, station: MASPALOMAS }));
 world.add(createEdrsToggle({ dashboard, edrs }));
@@ -99,6 +101,14 @@ world.add(createTracker({ dashboard }));
 world.add(createGlobe({ dashboard, station: MASPALOMAS }));
 world.add(createTables({ dashboard, orbitSource, station: MASPALOMAS }));
 createLegend({ dashboard });
+// Space view: zoom out past the local limit to see the Earth with the satellites' orbits (a second scene, same renderer).
+const space = createSpaceView({
+  THREE: ctx.THREE, renderer: ctx.renderer, canvas: ctx.canvas, container: document.getElementById('app'),
+  station: MASPALOMAS, orbitSource, missions: MISSIONS, localCamera: camera, getSelectedId: () => dashboard.selected()?.id ?? null,
+});
+world.add(space);
+world.setRender(() => space.render());
+dashboard.onSelect((entity) => { if (entity?.kind === 'satellite') space.leave(); }); // picking a satellite brings you back to the station
 world.start();
 
-export { scene, edrs, weather, weatherFx, dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };
+export { scene, edrs, weather, weatherFx, dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher, space };

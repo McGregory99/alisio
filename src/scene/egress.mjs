@@ -1,7 +1,7 @@
 // Network egress: a fibre trench from the campus toward off-site processing centres (generic, not a named site).
 import { entitiesFromStation } from '../core/station-entities.mjs';
 import { egressPath } from './station-assets-math.mjs';
-import { terrainHeight } from './terrain-math.mjs';
+import { surfaceHeight } from './terrain-math.mjs';
 import { registerAnchor } from './callouts-registry.mjs';
 
 const HEADING_RAD = (3 * Math.PI) / 2; // west, away from the coast; illustrative direction
@@ -11,7 +11,7 @@ export function createEgress({ THREE, scene, station }) {
   const link = entitiesFromStation(station).find((e) => e.kind === 'link');
   if (!link) return { update() {}, link: null };
   const origin = entitiesFromStation(station).find((e) => e.kind === 'facility' && e.facilityKind === 'building')?.position ?? { x: 0, z: 0 };
-  const pts = egressPath(origin, HEADING_RAD, LENGTH_M, STEP_M).map((p) => new THREE.Vector3(p.x, terrainHeight(p.x, p.z) + 0.5, p.z));
+  const pts = egressPath(origin, HEADING_RAD, LENGTH_M, STEP_M).map((p) => new THREE.Vector3(p.x, surfaceHeight(p.x, p.z) + 0.5, p.z));
 
   const group = new THREE.Group();
   const trench = new THREE.Mesh(

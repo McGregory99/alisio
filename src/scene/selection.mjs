@@ -20,23 +20,27 @@ export function createSelection({ THREE, camera: cam, sky }) {
   function flyToTarget({ object, entity }) {
     if (entity.kind === 'satellite') {
       followed = object;
+      cam.setLock(true);
       cam.flyTo(() => object.position, { dist: 140, follow: true, label: `Following ${entity.label}` });
       return;
     }
     box.setFromObject(object); box.getCenter(centre); box.getSize(size);
     const c = centre.clone();
+    cam.setLock(true);
     cam.flyTo(() => c, { dist: Math.min(1100, Math.max(45, size.length() * 1.5)) });
   }
 
   /** Fly to a named view point, for presets and search. */
   function flyToPoint(point, dist) {
     const c = new THREE.Vector3(point.x, point.y, point.z);
+    cam.setLock(false);
     cam.flyTo(() => c, { dist });
   }
 
   /** Fly to an area preset `{ target, dist, dirFrom }` (R6.4). */
   function flyToArea({ target, dist, dirFrom }) {
     const c = new THREE.Vector3(target.x, target.y, target.z);
+    cam.setLock(false);
     cam.flyTo(() => c, { dist, dirFrom });
   }
 

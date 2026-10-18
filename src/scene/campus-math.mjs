@@ -1,8 +1,9 @@
 // Pure campus layout helpers (no Three.js): ring road, service spurs, cable runs, fence posts and ribbon geometry.
-// Scene frame: x east, y up, z south-positive; 1 unit = 1 m. All of it is an illustrative placeholder layout.
+// Scene frame: x east, y up, z south-positive; 1 unit = 1 m. All of it is an illustrative placeholder layout
+// (no public site plan was found); only the ~1.6 km distance to the Las Palmas-Mogan road is reported (ESA).
 export const RING_R = 112; // service ring road around the campus
 export const FENCE_R = 126; // perimeter fence
-export const GATE = Object.freeze({ angleRad: Math.PI / 2, widthM: 16 }); // south side, towards the coast
+export const GATE = Object.freeze({ angleRad: -Math.PI / 3, widthM: 16 }); // north-north-east side, towards the access road
 
 /** Closed ring of `n` points at radius `r`. */
 export function ringRoad(r, n) {
@@ -60,4 +61,25 @@ export function fencePosts(r, spacing, gate = GATE) {
 /** Cable trench run: along x first, then along z. */
 export function lShapedRun(a, b) {
   return [{ x: a.x, z: a.z }, { x: b.x, z: a.z }, { x: b.x, z: b.z }];
+}
+
+/** Distance from the campus to the Las Palmas-Mogan road reported by ESA (about 1.6 km). */
+export const MAIN_ROAD_DISTANCE_M = 1600;
+
+/**
+ * Illustrative access road from the gate north-east along the ridge between two barrancos to the main road, `n` points.
+ * The alignment is a placeholder; its length (~1.6 km) follows ESA.
+ */
+export function accessRoadPath(gate = GATE, ringR = RING_R, n = 14) {
+  const start = { x: Math.cos(gate.angleRad) * ringR, z: Math.sin(gate.angleRad) * ringR };
+  const end = { x: 1000, z: -1250 }; // junction with the main road
+  return Array.from({ length: n }, (_, i) => {
+    const t = i / (n - 1), bend = Math.sin(t * Math.PI * 3) * 45 * Math.sin(t * Math.PI);
+    return { x: start.x + (end.x - start.x) * t + bend * 0.7, z: start.z + (end.z - start.z) * t + bend * 0.7 };
+  });
+}
+
+/** Short stretch of the main road (illustrative alignment) crossing the access road's end, running east-west. */
+export function mainRoadPath(junction) {
+  return [{ x: junction.x + 90, z: junction.z + 22 }, { x: junction.x, z: junction.z }, { x: junction.x - 260, z: junction.z - 40 }, { x: junction.x - 640, z: junction.z - 80 }];
 }

@@ -57,3 +57,20 @@ test('lShapedRun: a cable run leaves one point along x then z and arrives exactl
   assert.equal(run.length, 3);
   assert.ok(Math.abs(polylineLength(run) - 50) < 1e-9);
 });
+
+import { accessRoadPath, mainRoadPath, GATE, FENCE_R, MAIN_ROAD_DISTANCE_M } from '../../src/scene/campus-math.mjs';
+
+test('access road: leaves the gate towards the north-east and reaches the main road ~1.6 km away (ESA distance)', () => {
+  const p = accessRoadPath(), end = p[p.length - 1];
+  assert.ok(Math.abs(Math.hypot(p[0].x, p[0].z) - RING_R) < 1e-6);
+  assert.ok(Math.abs(Math.hypot(end.x, end.z) - MAIN_ROAD_DISTANCE_M) < 20);
+  assert.ok(end.x > 0 && end.z < 0, 'north-east');
+  assert.ok(GATE.angleRad < 0 && GATE.angleRad > -Math.PI / 2, 'gate on the north-east side');
+  assert.ok(FENCE_R > RING_R);
+});
+
+test('main road: a short east-west stretch through the access road end', () => {
+  const end = accessRoadPath().at(-1), m = mainRoadPath(end);
+  assert.ok(m.some((q) => q.x === end.x && q.z === end.z));
+  assert.ok(Math.abs(m[0].x - m.at(-1).x) > 500);
+});
