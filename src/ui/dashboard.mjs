@@ -76,7 +76,7 @@ function createKpiCard(id, label) {
   return card;
 }
 
-export function createDashboard({ orbitSource }) {
+export function createDashboard({ orbitSource, onViewAntenna }) {
   const root = h('aside', { id: 'dashboard', 'aria-label': 'Operations dashboard' });
   const doc = document.documentElement;
   const mq = window.matchMedia?.(MOBILE);
@@ -136,7 +136,7 @@ export function createDashboard({ orbitSource }) {
   }
   detailClose.addEventListener('click', () => select(null));
   document.addEventListener('alisio:deselect', () => { if (selected) select(null); });
-  const passCard = createPassCard({ onSelect: select });
+  const passCard = createPassCard({ onSelect: select, onViewAntenna });
   left.append(chipRow, passCard.el, detailPanel);
 
   // KPI cards (full set) live in the KPI drawer.

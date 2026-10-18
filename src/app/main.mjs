@@ -88,7 +88,10 @@ const search = createSearch({
   items: () => searchItems,
   onPick: (item) => { const t = allTargets().find((x) => (x.entity.id === item.id)); if (t) { labelsSys.show(t.entity); selection.flyToTarget(t); dashboard.select(t.entity); } },
 });
-const dashboard = world.add(createDashboard({ orbitSource }));
+const dashboard = world.add(createDashboard({
+  orbitSource,
+  onViewAntenna: (id) => { const t = targets.find((x) => x.entity.id === id); if (t) { labelsSys.show(t.entity); selection.flyToTarget(t); dashboard.select(t.entity); } },
+}));
 world.add(createDetail({ dashboard, orbitSource, station: MASPALOMAS, weather }));
 world.add(createWeatherSelect({ dashboard, weather, station: MASPALOMAS }));
 world.add(createEdrsToggle({ dashboard, edrs }));

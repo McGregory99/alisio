@@ -5,13 +5,13 @@ import { badge } from './badge.mjs';
 import { passCardModel } from './pass-card-model.mjs';
 import { currentPassCard } from './tracker-model.mjs';
 
-export function createPassCard({ onSelect }) {
+export function createPassCard({ onSelect, onViewAntenna = () => {} }) {
   const kind = h('p', { class: 'eyebrow' });
   const when = h('div', { class: 'pc-t num' });
   const nameBtn = h('button', { type: 'button', class: 'pc-name' });
   const prov = h('span', { style: 'display:contents' });
   const bandChip = h('span', { class: 'bd' });
-  const antenna = h('span', { class: 'chip plain', 'data-tone': 'info' });
+  const antenna = h('button', { type: 'button', class: 'chip plain', 'data-tone': 'info', title: 'View this antenna' });
   const rate = h('small', { class: 'num' });
   const stage = h('small', { class: 'pc-stage' });
   const segs = Array.from({ length: 5 }, () => h('b'));
@@ -25,6 +25,7 @@ export function createPassCard({ onSelect }) {
   let current = null, shown = null;
   const pick = () => { if (current) onSelect({ kind: 'satellite', id: `sat-${current.norad}`, label: current.name, provenance: current.provenance }); };
   nameBtn.addEventListener('click', (e) => { e.stopPropagation(); pick(); });
+  antenna.addEventListener('click', (e) => { e.stopPropagation(); if (current) onViewAntenna(current.antennaId); });
   el.addEventListener('click', pick);
 
   return {
@@ -40,7 +41,7 @@ export function createPassCard({ onSelect }) {
       setText(kind, m.kind); setText(when, m.countdown); setText(nameBtn, m.name);
       if (shown !== current.id) { shown = current.id; prov.replaceChildren(badge(m.provenance)); }
       setText(bandChip, m.band); bandChip.dataset.band = m.band;
-      setText(antenna, m.antenna); setText(rate, m.rate); setText(stage, m.stage);
+      setText(antenna, m.antenna); antenna.disabled = !current.antennaId; setText(rate, m.rate); setText(stage, m.stage);
       m.segments.forEach((s, i) => {
         segs[i].dataset.state = s.state; segs[i].title = s.label;
         if (s.state === 'active') segs[i].style.setProperty('--p', `${Math.round(Math.min(1, Math.max(0, m.fill * 4 - i)) * 100)}%`);
