@@ -15,8 +15,9 @@ export function createCamera({ THREE, camera, canvas }) {
   controls.minDistance = CAMERA_LIMITS.minDistance;
   controls.maxDistance = CAMERA_LIMITS.maxDistance;
   controls.maxPolarAngle = 1.5;
-  controls.target.set(0, 40, 0);
-  camera.position.set(-160, 110, 260);
+  const ground = terrainHeight(0, 0); // the platform height, so the first view sits above the campus
+  controls.target.set(0, ground + 4, 0);
+  camera.position.set(-160, ground + 74, 260);
   controls.update();
 
   // Fly and follow (R6.2). `getPos` returns the live scene position of the subject.
