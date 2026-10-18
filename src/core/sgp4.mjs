@@ -30,3 +30,12 @@ export function ecfAt(sat, date) {
   const pv = propagateAt(sat, date);
   return pv ? eciToEcf(pv.position, gstime(date)) : null;
 }
+
+/** Greenwich mean sidereal time in radians at `date` (rotation of the Earth-fixed frame against ECI). */
+export const gmstRad = (date) => gstime(date);
+
+/** Orbital period in minutes from the mean motion of a satrec (from `toSatrec`), or null. */
+export function periodMinutes(sat) {
+  const no = sat?.satrec?.no; // rad/min
+  return typeof no === 'number' && no > 0 ? (2 * Math.PI) / no : null;
+}
