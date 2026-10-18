@@ -2,12 +2,22 @@
 // location, the 15 m flagship, the KSAT 5 m antenna and the existence of a no-break power plant.
 // Positions inside the campus, extra dishes and buildings are an artistic placeholder (`illustrative`).
 // Look angles are computed from the geodetic origin below (station-origin reference).
+// `surroundings` records what the scene's terrain takes from ESA (verified) and what it invents (illustrative).
 export const MASPALOMAS = {
   id: 'MSP',
   name: 'Maspalomas',
   provenance: 'verified',
   location: { latDeg: 27.76289, lonDeg: -15.6338, altM: 205 },
   maskDeg: 5,
+  surroundings: {
+    // ESA (Maspalomas station page): ~1,750 m to the coast, ~1.6 km from the main Las Palmas-Mogan road,
+    // elevation 205.1 m above the WGS-84 ellipsoid (used as height above sea level in the scene).
+    coastDistanceM: 1750,
+    mainRoadDistanceM: 1600,
+    site: 'Montana Blanca, San Bartolome de Tirajana, south Gran Canaria',
+    provenance: 'verified',
+    illustrative: ['terrain shape and slope profile', 'barrancos', 'dune field', 'coastal town patch', 'access road alignment', 'campus layout and fence'],
+  },
   antennas: [
     {
       id: 'MSP-15',

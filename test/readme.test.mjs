@@ -14,5 +14,5 @@ test('README documents run, data sources, tests and the disclaimer (R8.4, R7.8)'
   assert.match(readme, /npm test/);
   assert.ok(readme.includes(DISCLAIMER));
   assert.match(readme, /not a live feed/i);
-  assert.match(readme, /coast \(compressed, illustrative\)/);
+  assert.match(readme, /coast ~1\.75 km \(ESA\)/);
 });

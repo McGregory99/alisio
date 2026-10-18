@@ -1,7 +1,8 @@
-// Campus infrastructure drawn on the terrain: ring road, service spurs, access road toward the coast, footpaths,
+// Campus infrastructure drawn on the terrain: ring road, service spurs, access road toward the main road, footpaths,
 // cable trenches, perimeter fence with a gate, lamp posts and light masts. All of it is an illustrative placeholder.
-import { RING_R, FENCE_R, GATE, ringRoad, spurTo, resample, ribbonXZ, fencePosts, lShapedRun } from './campus-math.mjs';
-import { terrainHeight } from './terrain-math.mjs';
+// The access road runs from the gate to the main road about 1.6 km away (ESA distance, illustrative alignment).
+import { RING_R, FENCE_R, GATE, ringRoad, spurTo, resample, ribbonXZ, fencePosts, lShapedRun, accessRoadPath, mainRoadPath } from './campus-math.mjs';
+import { terrainHeight, surfaceHeight } from './terrain-math.mjs';
 import { glowTexture } from './fx-textures.mjs';
 
 export function createRoads({ THREE, scene, entities }) {
@@ -22,7 +23,7 @@ export function createRoads({ THREE, scene, entities }) {
     for (const line of lines) {
       const { verts, indices } = ribbonXZ(resample(line, 3), half);
       const base = pos.length / 3;
-      for (const v of verts) pos.push(v.x, terrainHeight(v.x, v.z) + yOff, v.z);
+      for (const v of verts) pos.push(v.x, surfaceHeight(v.x, v.z) + yOff, v.z); // exactly on the mesh facets
       for (const i of indices) idx.push(base + i);
     }
     const g = new THREE.BufferGeometry();
@@ -38,12 +39,14 @@ export function createRoads({ THREE, scene, entities }) {
 
   const ring = ringRoad(RING_R, 72);
   const gateAt = { x: Math.cos(GATE.angleRad) * RING_R, z: Math.sin(GATE.angleRad) * RING_R };
-  const access = Array.from({ length: 11 }, (_, i) => ({ x: gateAt.x + Math.sin(i * 0.7) * 9, z: gateAt.z + i * 24 }));
+  const access = accessRoadPath(GATE, RING_R); // illustrative alignment towards the Las Palmas-Mogan road (~1.6 km, ESA)
+  const mainRoad = mainRoadPath(access[access.length - 1]);
   const spurs = [...spots.filter((p, i, a) => a.indexOf(p) === i), flag].map((p) => {
     const s = spurTo(p, RING_R), d = Math.hypot(s[1].x - s[0].x, s[1].z - s[0].z), k = Math.min(0.5, 12 / (d || 1));
     return [{ x: s[0].x + (s[1].x - s[0].x) * k, z: s[0].z + (s[1].z - s[0].z) * k }, s[1]];
   });
   ribbons([[...ring, ring[0]], access, ...spurs], 3, 0.14, flatMat('#4a4b4f'));
+  ribbons([mainRoad], 4, 0.14, flatMat('#55565a'));
   ribbons([[...ring, ring[0]]], 0.14, 0.17, flatMat('#d8d4c6')); // edge/centre line, one thin stripe
   const links = [[ops, flag], [flag, power ?? ops], ...antennas.filter((a) => a !== flag).map((a) => [flag, a])];
   ribbons(links.map(([a, b]) => [a, b]), 0.9, 0.1, flatMat('#cdbf9f')); // footpaths

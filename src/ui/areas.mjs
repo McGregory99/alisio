@@ -13,7 +13,7 @@ export function areasFor(station, { heightAt = () => 0 } = {}) {
     { id: 'flagship', label: 'Flagship dish', target: { x: fp.x, y: heightAt(fp.x, fp.z) + 8, z: fp.z }, dist: 80, dirFrom: { x: -1, y: 0.5, z: 1.2 } },
     { id: 'coast', label: 'Coast / sea', target: { x: 0, y: heightAt(0, COAST_Z) + 5, z: COAST_Z }, dist: 700, dirFrom: { x: 0, y: 0.45, z: -1 } },
     { id: 'processing', label: 'Processing', target: { x: hq.x - 260, y: heightAt(hq.x - 260, hq.z) + 20, z: hq.z }, dist: 620, dirFrom: { x: 0.2, y: 0.5, z: 1 } },
-    { id: 'orbit', label: 'Orbit view', target: { x: 0, y: 160, z: 0 }, dist: 1100, dirFrom: { x: 0, y: 1, z: 0.9 } },
+    { id: 'orbit', label: 'Orbit view', target: { x: 0, y: heightAt(0, 0) + 125, z: 0 }, dist: 1100, dirFrom: { x: 0, y: 1, z: 0.9 } },
   ];
 }
 
