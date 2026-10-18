@@ -43,9 +43,11 @@ export function runInspector(container = document.body, search = location.search
     return holder;
   });
 
+  const centres = holders.map((h) => new THREE.Box3().setFromObject(h).getCenter(new THREE.Vector3()));
+  const target = centres.reduce((a, c) => a.add(c), new THREE.Vector3()).divideScalar(centres.length); // frame the volume, not the origin
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 500);
   const span = families.length === 1 ? Math.max(...families.map((f) => SENTINEL_SPECS[f].maxExtent)) * 1.05 : spacing * families.length * 0.62;
-  const place = () => { camera.position.copy(dir).multiplyScalar(span / (Math.tan((camera.fov * Math.PI) / 360) * Math.min(1, camera.aspect)) / 2 * 1.1); camera.lookAt(0, 0, 0); };
+  const place = () => { camera.position.copy(dir).multiplyScalar(span / (Math.tan((camera.fov * Math.PI) / 360) * Math.min(1, camera.aspect)) / 2 * 1.1).add(target); camera.lookAt(target); };
   const resize = () => {
     const w = innerWidth, h = innerHeight;
     renderer.setSize(w, h, false);
