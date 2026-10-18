@@ -18,9 +18,10 @@ test('the flagship preset targets the flagship antenna of the station data', () 
   assert.equal(areasFor(noFlag, { heightAt: flat }).find((x) => x.id === 'flagship').target.x, 12); // falls back to the first antenna
 });
 
-test('the coast preset looks toward the compressed coast', () => {
+test('the coast preset looks at the shoreline, 1,750 m south of the station', () => {
   const a = areasFor(MASPALOMAS, { heightAt: flat }).find((x) => x.id === 'coast');
   assert.equal(a.target.z, COAST_Z);
+  assert.equal(COAST_Z, 1750);
 });
 
 test('every preset keeps its distance within the camera maximum', () => {
@@ -36,4 +37,17 @@ test('the processing preset looks along the egress link, west of the campus buil
   const a = areasFor(MASPALOMAS, { heightAt: flat }).find((x) => x.id === 'processing');
   assert.equal(a.label, 'Processing');
   assert.ok(a.target.x < -100);
+});
+
+test('with the real terrain the coast and orbit presets frame points above the ground and the camera ends above it', async () => {
+  const { terrainHeight } = await import('../../src/scene/terrain-math.mjs');
+  const areas = areasFor(MASPALOMAS, { heightAt: terrainHeight });
+  const orbit = areas.find((x) => x.id === 'orbit'), coast = areas.find((x) => x.id === 'coast');
+  assert.ok(orbit.target.y > terrainHeight(0, 0) + 50, 'orbit target hovers above the 205 m platform');
+  assert.ok(coast.target.y > terrainHeight(0, COAST_Z));
+  for (const a of areas) {
+    const len = Math.hypot(a.dirFrom.x, a.dirFrom.y, a.dirFrom.z), k = a.dist / len;
+    const camY = a.target.y + a.dirFrom.y * k, camX = a.target.x + a.dirFrom.x * k, camZ = a.target.z + a.dirFrom.z * k;
+    assert.ok(camY > terrainHeight(camX, camZ), `${a.id} camera starts below the ground`);
+  }
 });

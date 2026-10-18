@@ -1,6 +1,7 @@
 // Sun-driven environment: light, sky and fog colour, stars at night. Parameters come from env-math.
 import { envFromSun, weatherEnv, gradeFromSun, sunGlowStrength, domeColors } from './env-math.mjs';
 import { weatherEffects } from '../core/weather.mjs';
+import { terrainHeight } from './terrain-math.mjs';
 
 export function createEnv({ THREE, scene, renderer, weather }) {
   const hemi = new THREE.HemisphereLight('#bcd4ee', '#6b5a48', 0.6);
@@ -10,6 +11,8 @@ export function createEnv({ THREE, scene, renderer, weather }) {
   Object.assign(sun.shadow.camera, { left: -250, right: 250, top: 250, bottom: -250, near: 1, far: 1200 });
   const moon = new THREE.DirectionalLight('#9fb6ff', 0.5);
   moon.position.set(-300, 500, -200); // fixed cool fill from the north-west; not an ephemeris moon
+  const campusY = terrainHeight(0, 0); // the shadow box follows the campus platform (~205 m above the sea)
+  sun.target.position.set(0, campusY, 0);
   scene.add(hemi, sun, sun.target, moon);
   scene.background = new THREE.Color('#8fb8d8');
   scene.fog = new THREE.Fog('#8fb8d8', 500, 2600);
@@ -52,7 +55,7 @@ export function createEnv({ THREE, scene, renderer, weather }) {
     update({ sun: s }) {
       const e = weatherEnv(envFromSun(s.elDeg), (weather ? weather.effects() : weatherEffects('clear')).visual);
       const az = (s.azDeg * Math.PI) / 180, el = (Math.max(s.elDeg, 2) * Math.PI) / 180;
-      sun.position.set(Math.cos(el) * Math.sin(az), Math.sin(el), -Math.cos(el) * Math.cos(az)).multiplyScalar(800);
+      sun.position.set(Math.cos(el) * Math.sin(az), Math.sin(el), -Math.cos(el) * Math.cos(az)).multiplyScalar(800).add(sun.target.position);
       sun.intensity = e.sunIntensity;
       hemi.intensity = e.ambient;
       moon.intensity = e.moonIntensity;
