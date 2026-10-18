@@ -1,9 +1,9 @@
 // Orbit / pan / zoom (mouse and touch) with bounds: never below terrain, never beyond the maximum distance.
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { constrainCamera, framingPosition, easeInOut, flyDuration, lerp3, followDelta } from './camera-math.mjs';
+import { constrainCamera, framingPosition, easeInOut, flyDuration, lerp3, followDelta, interactionScheme } from './camera-math.mjs';
 import { terrainHeight } from './terrain-math.mjs';
 
-export const CAMERA_LIMITS = Object.freeze({ clearance: 6, minDistance: 25, maxDistance: 1400 });
+export const CAMERA_LIMITS = Object.freeze({ clearance: 6, minDistance: 25, maxDistance: 1400, lockedMinDistance: 8 });
 
 export function createCamera({ THREE, camera, canvas }) {
   const controls = new OrbitControls(camera, canvas);
@@ -22,7 +22,17 @@ export function createCamera({ THREE, camera, canvas }) {
   // Fly and follow (R6.2). `getPos` returns the live scene position of the subject.
   let fly = null, tracked = null; // tracked = { getPos, label, last }
   controls.addEventListener('start', () => { fly = null; }); // the user takes over
-  addEventListener('keydown', (e) => { if (e.key === 'Escape') tracked = null; });
+  // Orbit lock: with an object selected the camera turns around it instead of panning.
+  let locked = false;
+  function setLock(on) {
+    locked = Boolean(on);
+    const s = interactionScheme(locked, { freeMin: CAMERA_LIMITS.minDistance, lockedMin: CAMERA_LIMITS.lockedMinDistance });
+    controls.mouseButtons.LEFT = s.left === 'rotate' ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
+    controls.touches.ONE = s.oneTouch === 'rotate' ? THREE.TOUCH.ROTATE : THREE.TOUCH.PAN;
+    controls.enablePan = s.pan;
+    controls.minDistance = s.minDistance;
+  }
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') { tracked = null; setLock(false); } });
 
   return {
     controls,
@@ -35,7 +45,9 @@ export function createCamera({ THREE, camera, canvas }) {
       fly = { t: 0, dur: durationS ?? flyDuration(Math.hypot(toT0.x - camera.position.x, toT0.y - camera.position.y, toT0.z - camera.position.z)), fromT: controls.target.clone(), fromP: camera.position.clone(), getPos, dist, dir };
       tracked = follow ? { getPos, label, last: null } : null;
     },
-    stopFollow() { tracked = null; },
+    stopFollow() { tracked = null; setLock(false); },
+    setLock,
+    locked: () => locked,
     following: () => tracked?.label ?? null,
     flying: () => fly !== null,
     update(frame) {

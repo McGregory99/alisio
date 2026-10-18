@@ -26,6 +26,15 @@ export function framingPosition(target, camPos, dist) {
   return { x: target.x + dx * k, y: target.y + dy * k, z: target.z + dz * k };
 }
 
+/**
+ * Pointer scheme of the camera. Free: left drag pans, right drag rotates. Locked on a selected object: the object
+ * stays at the centre, left drag (or one finger) rotates around it and panning is off; the minimum distance drops so
+ * a small object can be viewed up close.
+ */
+export const interactionScheme = (locked, { freeMin, lockedMin }) => (locked
+  ? { left: 'rotate', oneTouch: 'rotate', pan: false, minDistance: lockedMin }
+  : { left: 'pan', oneTouch: 'pan', pan: true, minDistance: freeMin });
+
 export const smoothstep = (k) => { const c = Math.min(1, Math.max(0, k)); return c * c * (3 - 2 * c); };
 
 export const lerp3 = (a, b, k) => ({ x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, z: a.z + (b.z - a.z) * k });

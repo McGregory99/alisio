@@ -9,7 +9,7 @@ Objective: three polish features. Branch: feat/space-orbit-orography. Delivery: 
 - Assumption A2: space view reuses SGP4 orbit records already loaded; orbits are inertial (ECI) loops, Earth rotated by GMST.
 
 ## Tasks
-- T1 (S2) orbit around the selected object: inline. Status: todo
+- T1 (S2) orbit around the selected object: inline. Status: done (verified in headless Chrome: left-drag rotates around the selected 15 m antenna, it stays centred; test interactionScheme)
 - T2 (S1) 3D space view with orbits: delegated writer (worktree), parallel with T3. Status: todo
 - T3 (S3) orography + station plan fidelity: research (done by haiku) then delegated writer, disjoint files from T2. Status: todo
 

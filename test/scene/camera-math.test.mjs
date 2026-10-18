@@ -62,3 +62,10 @@ test('easeInOut: 0 at 0, 1 at 1, symmetric midpoint, monotonic', () => {
   assert.ok(Math.abs(easeInOut(0.5) - 0.5) < 1e-9);
   assert.ok(easeInOut(0.3) < easeInOut(0.4));
 });
+
+test('interaction scheme: free camera pans, locked camera rotates around the object', async () => {
+  const { interactionScheme } = await import('../../src/scene/camera-math.mjs');
+  const lim = { freeMin: 25, lockedMin: 8 };
+  assert.deepEqual(interactionScheme(false, lim), { left: 'pan', oneTouch: 'pan', pan: true, minDistance: 25 });
+  assert.deepEqual(interactionScheme(true, lim), { left: 'rotate', oneTouch: 'rotate', pan: false, minDistance: 8 });
+});

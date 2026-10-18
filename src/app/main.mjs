@@ -92,6 +92,7 @@ const dashboard = world.add(createDashboard({
   orbitSource,
   onViewAntenna: (id) => { const t = targets.find((x) => x.entity.id === id); if (t) { labelsSys.show(t.entity); selection.flyToTarget(t); dashboard.select(t.entity); } },
 }));
+dashboard.onSelect((entity) => { if (!entity) camera.setLock(false); }); // closing the detail releases the orbit lock
 world.add(createDetail({ dashboard, orbitSource, station: MASPALOMAS, weather }));
 world.add(createWeatherSelect({ dashboard, weather, station: MASPALOMAS }));
 world.add(createEdrsToggle({ dashboard, edrs }));
