@@ -103,3 +103,16 @@ export function foamAlpha(h) {
 export function seaDepthTint(depth) {
   return toHex(mixRgb(rgb('#4aa1a3'), rgb('#1d4b66'), smooth(0, 9, depth)));
 }
+
+export const SEA_WAVE_MAX = 0.8; // m, bound of seaWave
+
+/**
+ * Swell height offset in m at (x, z) and time t (s): two crossing sine trains, the larger one rolling in from
+ * the south-west. Always within +-SEA_WAVE_MAX.
+ */
+export function seaWave(x, z, t) {
+  const a = Math.sin(x * 0.09 + z * 0.06 - t * 1.1);
+  const b = Math.sin(x * -0.04 + z * 0.15 - t * 1.6 + 1.7);
+  const c = Math.sin(x * 0.2 - z * 0.12 - t * 2.2 + 4.1);
+  return SEA_WAVE_MAX * (0.5 * a + 0.32 * b + 0.18 * c);
+}

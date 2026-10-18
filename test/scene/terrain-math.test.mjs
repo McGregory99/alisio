@@ -80,3 +80,10 @@ test('foamAlpha: strongest at the waterline, zero on dry land and in deep water'
 test('seaDepthTint: shallow water is lighter than deep water', () => {
   assert.ok(lum(seaDepthTint(0.5)) > lum(seaDepthTint(12)));
 });
+
+test('sea swell stays within its bound, is deterministic and moves with time', async () => {
+  const { seaWave, SEA_WAVE_MAX } = await import('../../src/scene/terrain-math.mjs');
+  for (let i = 0; i < 400; i++) assert.ok(Math.abs(seaWave(i * 7.3 - 900, i * 3.1, i * 0.37)) <= SEA_WAVE_MAX + 1e-9);
+  assert.equal(seaWave(10, 20, 3), seaWave(10, 20, 3));
+  assert.notEqual(seaWave(10, 20, 3), seaWave(10, 20, 4));
+});

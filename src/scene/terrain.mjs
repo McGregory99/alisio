@@ -1,6 +1,6 @@
 // Terrain, Atlantic sea and the compressed coast marker. Flat-shaded clay look (Downlink technique): facets are
 // coloured by height and slope (ochre soil, dark basalt, pale shore), with rocks and sparse scrub scattered on top.
-import { terrainHeight, SEA_LEVEL, COAST_Z, hash2, vnoise, groundColor, scatterPoints, foamAlpha, seaDepthTint } from './terrain-math.mjs';
+import { terrainHeight, SEA_LEVEL, COAST_Z, hash2, vnoise, groundColor, scatterPoints, foamAlpha, seaDepthTint, seaWave } from './terrain-math.mjs';
 import { registerAnchor } from './callouts-registry.mjs';
 
 export function createTerrain({ THREE, scene }) {
@@ -34,8 +34,29 @@ export function createTerrain({ THREE, scene }) {
     new THREE.PlaneGeometry(7000, 3400, 1, 1).rotateX(-Math.PI / 2),
     new THREE.MeshLambertMaterial({ color: '#3a8aa6' }),
   );
-  sea.position.set(0, SEA_LEVEL - 0.4, COAST_Z + 1500);
+  sea.position.set(0, SEA_LEVEL - 1.2, COAST_Z + 1500);
   scene.add(sea);
+
+  // Swell: a coarse faceted grid over the near sea whose heights roll with time (faded to flat at its borders).
+  const SW = 2200, SD = 1400, swellGeo = new THREE.PlaneGeometry(SW, SD, 220, 140).rotateX(-Math.PI / 2);
+  swellGeo.translate(0, 0, COAST_Z - 60 + SD / 2);
+  const swellBase = Float32Array.from(swellGeo.attributes.position.array);
+  const swell = new THREE.Mesh(swellGeo, new THREE.MeshLambertMaterial({ color: '#3a8aa6', flatShading: true }));
+  swell.position.y = SEA_LEVEL - 0.4;
+  swell.frustumCulled = false;
+  scene.add(swell);
+  let seaT = 0, swellAcc = 0; // the swell is rebuilt at 30 Hz at most
+  const edge = (v, half) => Math.min(1, (half - Math.abs(v)) / (half * 0.12));
+  function updateSwell() {
+    const q = swellGeo.attributes.position;
+    for (let i = 0; i < q.count; i++) {
+      const x = swellBase[i * 3], z = swellBase[i * 3 + 2];
+      const fade = Math.max(0, Math.min(edge(x, SW / 2), (SD - (z - (COAST_Z - 60))) / (SD * 0.12), (z - (COAST_Z - 60)) / 90));
+      q.setY(i, seaWave(x, z, seaT) * fade);
+    }
+    q.needsUpdate = true; // flat shading derives normals per facet, so none to recompute
+  }
+  updateSwell();
 
   const shore = new THREE.PlaneGeometry(2600, 260, 200, 40);
   shore.rotateX(-Math.PI / 2);
@@ -78,5 +99,5 @@ export function createTerrain({ THREE, scene }) {
     content: () => ({ title: 'coast (compressed, illustrative)', tone: 'note', priority: 8 }),
   });
 
-  return { update() {}, land, sea, shore: shoreMesh, rocks: rockMesh, scrub: scrubMesh };
+  return { update({ dt = 0 } = {}) { seaT += dt; swellAcc += dt; if (swellAcc >= 1 / 30) { swellAcc = 0; updateSwell(); } }, swell, land, sea, shore: shoreMesh, rocks: rockMesh, scrub: scrubMesh };
 }
