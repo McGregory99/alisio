@@ -11,7 +11,7 @@ Objective: three polish features. Branch: feat/space-orbit-orography. Delivery: 
 ## Tasks
 - T1 (S2) orbit around the selected object: inline. Status: done (verified in headless Chrome: left-drag rotates around the selected 15 m antenna, it stays centred; test interactionScheme)
 - T2 (S1) 3D space view with orbits: delegated writer (worktree), parallel with T3. Status: todo
-- T3 (S3) orography + station plan fidelity: research (done by haiku) then delegated writer, disjoint files from T2. Status: todo
+- T3 (S3) orography + station plan fidelity: research (done by haiku) then delegated writer, disjoint files from T2. Status: done on feat/orography (coast at 1750 m, platform 205 m, barrancos, dune patch, town patch, access road; docs/orography.md; verified in headless Chrome by day: campus, flagship, coast, processing, orbit)
 
 ## Log
 - L1 (2026-10-18, user): "vale ahora quiero que, si haces mucho zoom hacia atras acabas viendo el globo desde el espacio en 3d y ves las orbitas de los satelites alli. Tambien quiero que si seleccionas un objeto (satelite, edificio...) una vez se haga zoom te deje girar la camara respecto al objeto, os ea ocn el en el centro. Analiza la orografia y los planos de la estacion para que el ambiente sea mas fidedigno a la realidad. Esto son varias tareas"

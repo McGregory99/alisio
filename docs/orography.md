@@ -33,13 +33,13 @@ upper estimate.
   invented; only the existence of the Fataga barranco system east of the station is real.
 - **Dune field**: a pale sand patch centred 2.6 km east and 190 m north of the shoreline. Real dunes lie further east
   (~4.7 km); the patch is nearer so that it can be seen.
-- **Coastal town**: about 100 instanced plain boxes, 2-5 storeys, on the shore south of the station
+- **Coastal town**: about 150 instanced plain boxes, 2-5 storeys, on the shore south of the station
   (x -350..900, z 1540..1730), standing in for the resorts. No real building is modelled.
 - **Access road**: a winding alignment from a north-north-east gate to a junction with an east-west main road,
   1,600 m from the station. Only that distance is real.
 - **Campus layout**: ring road, fence, gate, dish and building positions, cable trenches. No public plan of the site
   (buildings, radomes, fence, roads) could be found.
 - **Mountain backdrop**: rounded ridges far north and on both flanks, only to show that the interior rises.
-- **Mesh resolution**: 10 m facets within 700 m of the campus, 20 m at the shore, up to 250 m far away. Fog
+- **Mesh resolution**: 10 m facets within 700 m of the campus (and across the barranco beds), 20 m at the shore, up to 250 m far away. Fog
   (2.6 km) hides the mesh borders (5 km east/west, 4.5 km north) from the camera limits (1.4 km from its target).
 - **Sun shadow box**: follows the platform (205 m up), not the sea-level origin.
