@@ -2,7 +2,7 @@
 // local --(zoom out past the limit)--> to-space --(fade)--> space --(zoom in past the limit / Esc / button)--> to-local --> local
 export const FADE_S = 0.7;          // total fade-through; the scene switches at the midpoint, behind a fully dark overlay
 export const ZOOM_THRESHOLD = 300;  // accumulated wheel/pinch units pushed past the limit before the hand-over starts
-export const ZOOM_IDLE_MS = 800;    // a pause this long forgets the push
+export const ZOOM_IDLE_MS = 1500;   // a pause this long forgets the push
 
 export const initialTransition = () => ({ phase: 'local', t: 0 });
 

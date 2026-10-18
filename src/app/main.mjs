@@ -34,6 +34,7 @@ import { createWeatherFx } from '../scene/weather-fx.mjs';
 import { createWeatherSelect } from '../ui/weather-select.mjs';
 import { createEdrs } from '../scene/edrs.mjs';
 import { createEdrsToggle } from '../ui/edrs-toggle.mjs';
+import { createSpaceView } from '../scene/space-view.mjs';
 
 // Hidden debug route: ?models=1 shows the Sentinel model inspector instead of the world.
 if (new URLSearchParams(location.search).has('models')) {
@@ -100,6 +101,14 @@ world.add(createTracker({ dashboard }));
 world.add(createGlobe({ dashboard, station: MASPALOMAS }));
 world.add(createTables({ dashboard, orbitSource, station: MASPALOMAS }));
 createLegend({ dashboard });
+// Space view: zoom out past the local limit to see the Earth with the satellites' orbits (a second scene, same renderer).
+const space = createSpaceView({
+  THREE: ctx.THREE, renderer: ctx.renderer, canvas: ctx.canvas, container: document.getElementById('app'),
+  station: MASPALOMAS, orbitSource, missions: MISSIONS, localCamera: camera, getSelectedId: () => dashboard.selected()?.id ?? null,
+});
+world.add(space);
+world.setRender(() => space.render());
+dashboard.onSelect((entity) => { if (entity?.kind === 'satellite') space.leave(); }); // picking a satellite brings you back to the station
 world.start();
 
-export { scene, edrs, weather, weatherFx, dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher };
+export { scene, edrs, weather, weatherFx, dashboard, clock, orbitSource, schedule, sky, dishes, packets, assets, egress, camera, selection, search, areaSwitcher, space };

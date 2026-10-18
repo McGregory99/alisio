@@ -23,6 +23,7 @@ The scene fills the screen. A thin top bar, three chips (next AOS, active, today
 | `H` | Hide the interface (the disclaimer stays) |
 | `Esc` | Close the drawer, then the selection |
 | `/` | Search |
+| Scroll out past the limit | Earth from space with the satellites' orbits; `Esc` or zoom in to return ([details](docs/space-view.md)) |
 
 Details of a satellite or antenna appear when you select it. Scene labels show only the selection and the active pass.
 
